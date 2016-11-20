@@ -7,7 +7,7 @@ description: "关于城市、数据 | Jacky，Web & Mobile Lover，Front-End Eng
 keyword: "Jackyfan, 数据分析, 城市设计"
 url: "https://jacky-fan.github.io/"              # your host, for absolute URL
 baseurl: ""                             # for example, '/blog' if your blog hosted on 'host/blog'
-
+gem "minima"
 
 
 # SNS settings
