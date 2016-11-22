@@ -1,0 +1,633 @@
+---
+layout:     post
+title:      "R笔记之向量化操作"
+subtitle:   " \"Looping,lapply,split,exercise\""
+date:       2016-01-10 17:30:00
+author:     "Jacky"
+header-img: "img/post-bg-2015.jpg"
+tags:
+    - R笔记
+---
+
+
+## Looping on the Command Line
+
+ - `lapply: Loop over a list and evaluate a function on each element`
+ - `sapply: Same as lapply but try to simplify the result`
+ - `apply: Apply a function over the margins of an array`
+ - `tapply: Apply a function over subsets of a vector`
+ - `mapply: Multivariate version of lapply`
+ 
+ An auxiliary function split is also useful, particularly in conjunction with lapply.
+
+
+### lapply
+lapply takes three arguments: 1) a list x; 2) a function (or the same of a function) FUN; 3) other arguments via its ... argument. if x is not a list, it will be coerced to a list using as.list.
+```
+function (x, FUN, ...)
+    {
+    FUN <- match.fun(FUN)
+    if (!is.vector(x) || is.object(x))
+        x <- as.list(x)
+        .Internal(lapply(x, FUN))
+    }
+```
+
+**apply always returns a list, regardless of the class of the input**
+```
+> x <- list(a = 1:5, b = rnorm(10))
+> lapply(x, mean)
+$a
+[1] 3
+
+$b
+[1] -0.3547574
+
+-runif
+> x <- 1:4
+> lapply(x, runif)
+[[1]]
+[1] 0.5858749
+
+[[2]]
+[1] 0.9175867 0.5018911
+
+[[3]]
+[1] 0.9469087 0.9433378 0.1517459
+
+[[4]]
+[1] 0.09512925 0.74208153 0.15909282 0.87364938
+
+> lapply(x, runif, min = 0, max = 10)
+[[1]]
+[1] 5.831673
+
+[[2]]
+[1] 7.570051 7.305406
+
+[[3]]
+[1] 9.368319 5.455867 7.415463
+
+[[4]]
+[1] 6.826887 7.357280 3.238416 7.802379
+```
+**An anonymous function for extracting the first column of each matrix**
+```
+> x <- list(a = matrix(1:4, 2, 2), b = matrix(1:6, 3, 2))
+> x
+$a
+     [,1] [,2]
+[1,]    1    3
+[2,]    2    4
+
+$b
+     [,1] [,2]
+[1,]    1    4
+[2,]    2    5
+[3,]    3    6
+
+> lapply(x, function(elt) elt[, 1])
+$a
+[1] 1 2
+
+$b
+[1] 1 2 3
+```
+### sapply
+sapply will try to simplify the result of lapply if possible.
+
+- `if the result is a list where every element is length 1, then a vector is returned`
+-  `if the result is a list where every element is a vector of the same length (>1), a matrix is returned. `
+-  `if it can't figure things out, a list is returned`
+
+### apply
+apply is used to a evaluate a function (often an anonymous one) over the margins of array.
+
+- `It is most often used to apply a function to the rows or columns of a matrix`
+-  `It can be used with general arrays, e.g. taking the average of an array of matrices`
+-  `It is not really faster than writing a loop, but it works in one line!`
+```
+> str(apply)
+ function (X, MARGIN, FUN, ...)
+```
+- `X is an array`
+-  `MARGIN is an integer vector indicating which margins should be "retained".`
+-  `FUN is a function to be applied`
+-  `... is for other arguments to be passed to FUN`
+```
+> x <- matrix(rnorm(200), 20, 10)
+> apply(x, 2, mean)
+ [1]  0.075145604  0.035773125  0.028000869 -0.002397926 -0.093946806 -0.137180745
+ [7]  0.185798470  0.176721101  0.333040593 -0.023563408
+> apply(x, 1, sum)
+ [1]  3.6178468 -1.7521142 -2.8018156 -3.0790132 -1.5047359  1.1693516  2.8311426
+ [8] -0.3017269  3.9315377 -3.0270337  1.9042014  0.1322095  3.4130400  4.5420898
+[15]  6.5186712  2.2904191 -3.4532168  0.9306271 -2.3215379 -1.4921250
+```
+**col/row sums and means**
+For sums and means of matrix dimensions, we have some shortcuts.
+
+- `rowSums = apply(x, 1, sum)`
+- `rowMeans = apply(x, 1, mean)`
+-  `colSums = apply(x, 2, sum)`
+-  `colMeans = apply(x, 2, mean)`
+The shortcut functions are much faster, but you won't notice unless you're using a large matrix.
+
+**Other Ways to Apply**
+Quantiles of the rows of a matrix.
+```
+> x <- matrix(rnorm(200), 20, 10)
+> apply(x, 1, quantile, probs = c(0.25, 0.75))
+          [,1]       [,2]       [,3]        [,4]       [,5]       [,6]       [,7]
+25% -1.0785842 -0.1784524 -0.5438079 -0.64180635 -1.0005862 -0.6028029 -0.3994210
+75%  0.4211757  1.1409644  0.8497324  0.07363245  0.3657194  1.7941782  0.7042971
+          [,8]       [,9]      [,10]      [,11]      [,12]      [,13]      [,14]
+25% -1.0833555 -0.4054171 -0.7756497 -0.3573221 -0.3508735 -0.5804230 -1.2599964
+75%  0.4103444  0.1445452  0.8813965  0.1172065  0.4001036  0.4037903  0.4085925
+         [,15]      [,16]      [,17]      [,18]      [,19]      [,20]
+25% -0.3023458 -0.8841903 -0.3171798 -0.9172023 -0.5017125 -0.2736942
+75%  0.5983026  0.8812674  0.7821295  0.6989358  0.6052281  0.6885168
+```
+
+Average matrix in an array ?
+```
+> a <- array(rnorm(2 * 2 * 10), c(2,2,10))
+> apply(a,c(1,2),mean)
+            [,1]      [,2]
+[1,] -0.55440455 0.0617595
+[2,] -0.05850618 0.2768596
+> rowMeans(a, dims = 2)
+            [,1]      [,2]
+[1,] -0.55440455 0.0617595
+[2,] -0.05850618 0.2768596
+```
+### mapply
+mapply is a multivariate apply of sorts which applies a function in parrallel over a set of arguments.
+```
+> str(mapply)
+function (FUN, ..., MoreArgs = NULL, SIMPLIFY = TRUE, 
+          USE.NAMES = TRUE) 
+```
+- `FUN is a function to apply`
+-  `... contains arguments to apply over`
+-  `MoreArgs is a list of other arguments to FUN`
+-  `SIMPLIFY indicates whether the result should be simplified`
+
+The following is tedious to type
+
+*list(rep(1, 4), rep(2, 3), rep(3,2), rep(4, 1))*
+
+Instead we can do
+```
+> mapply(rep, 1:4, 4:1)
+[[1]]
+[1] 1 1 1 1
+
+[[2]]
+[1] 2 2 2
+
+[[3]]
+[1] 3 3
+
+[[4]]
+[1] 4
+```
+
+**Vectorizing a Function**
+```
+> noise <- function(n, mean, sd){
++         rnorm(n, mean, sd)
++ }
+> noise(5, 1, 2)
+[1]  0.8869572 -3.2587213  1.6896915 -2.8099109 -0.6223403
+> noise(1:5, 1:5, 2)
+[1] 3.648009 3.231274 5.183338 4.613210 4.779682
+
+mapply(noise, 1:5, 1:5, 2)
+[[1]]
+[1] -0.8486255
+
+[[2]]
+[1] 5.185828 2.090021
+
+[[3]]
+[1] 1.569743 4.730446 5.148882
+
+[[4]]
+[1] 7.791310 2.794005 3.218264 3.167556
+
+[[5]]
+[1] 4.248685 4.266738 4.408645 7.883641 3.604923
+```
+
+**Instant Vectorization**
+Which is the same as
+```
+> list(noise(1, 1, 2),noise(2, 2, 2),
++      noise(3, 3, 2),noise(4, 4, 2),
++      noise(5, 5, 2))
+[[1]]
+[1] 0.223665
+
+[[2]]
+[1] 3.305073 4.249545
+
+[[3]]
+[1] 1.455778 1.983828 4.047241
+
+[[4]]
+[1] 6.035508 3.497671 1.140013 7.418242
+
+[[5]]
+[1] 7.870139 3.579258 4.869865 1.481063 6.139446
+```
+**>unique(c(3, 4, 5, 5,5, 6, 6))**
+**[1] 3 4 5 6**
+
+```
+> sapply(flags,unique)
+$name
+  [1] Afghanistan              Albania                 
+  [3] Algeria                  American-Samoa          
+  [5] Andorra                  Angola                  
+  [7] Anguilla                 Antigua-Barbuda         
+  [9] Argentina                Argentine               
+ [11] Australia                Austria                 
+ [13] Bahamas                  Bahrain      
+
+
+
+lapply(unique_vals, function(elem) elem[2]) will return a list containing
+the second item from each element of the unique_vals list. Note that our
+function takes one argument, elem, which is just a 'dummy variable' that
+takes on the value of each element of unique_vals, in turn.
+
+> lapply(unique_vals,function(elem) elem[2])
+$name
+[1] Albania
+194 Levels: Afghanistan Albania Algeria American-Samoa Andorra ... Zimbabwe
+
+$landmass
+[1] 3
+
+$zone
+[1] 3
+
+$area
+[1] 29
+
+$population
+[1] 3
+
+$language
+[1] 6
+
+$religion
+[1] 6
+
+$bars
+[1] 2
+
+$stripes
+[1] 0
+```
+
+### tapply
+**tapply** is used to apply a function over subsets of a vector. I don’t know why it’s called **tapply**
+
+	> str(tapply)
+	function (X, INDEX, FUN = NULL, ..., simplify = TRUE)
+
+- **X** is a vector
+- **INDEX** is a factor or a list of factors (or else they are coerced to factors)
+- **FUN** is a function to be applied
+- ... contains other arguments to be passed **FUN**
+- **simplify**, should we simplify the result?
+
+**Take group means.**
+
+	> x <- c(rnorm(10), runif(10), rnorm(10, 1))
+	> f <- gl(3, 10)
+	> f
+	 [1] 1 1 1 1 1 1 1 1 1 1 2 2 2 2 2 2 2 2 2 2 3 3 3
+	[24] 3 3 3 3 3 3 3
+	Levels: 1 2 3
+	> tapply(x, f, mean)
+               1                 2                  3
+	0.1144464   0.5163468   1.2463678
+
+**Take group means without simplification**
+
+	> tapply(x, f, mean, simplify = FALSE)
+	‘1‘
+	[1] 0.1144464
+	‘2‘
+	[1] 0.5163468
+	‘3‘
+	[1] 1.246368
+
+**Find group ranges**
+
+	> tapply(x, f, range)
+	‘1‘
+	[1] -1.097309 2.694970
+	‘2‘
+	[1] 0.09479023 0.79107293
+	‘3‘
+	[1] 0.4717443 2.5887025
+
+### split
+**split** takes a vector or other objects and splits it into groups determined by a factor or list of
+factors.
+
+	> str(split)
+	function (x, f, drop = FALSE, ...)
+
+- **x** is a vector (or list) or data frame
+- **f** is a factor (or coerced to one) or a list of factors
+- **drop** indicates whether empty factors levels should be dropped
+
+		> x <- c(rnorm(10), runif(10), rnorm(10, 1))
+		> f <- gl(3, 10)
+		> split(x, f)
+		‘1‘
+		 [1] -0.8493038 -0.5699717 -0.8385255 -0.8842019
+		 [5] 0.2849881 0.9383361 -1.0973089 2.6949703
+		 [9] 1.5976789 -0.1321970
+		‘2‘
+		 [1] 0.09479023 0.79107293 0.45857419 0.74849293
+		 [5] 0.34936491 0.35842084 0.78541705 0.57732081
+		 [9] 0.46817559 0.53183823
+		‘3‘
+		 [1] 0.6795651 0.9293171 1.0318103 0.4717443
+		 [5] 2.5887025 1.5975774 1.3246333 1.4372701
+
+A common idiom is **split** followed by an **lapply**
+
+	> lapply(split(x, f), mean)
+	‘1‘
+	[1] 0.1144464
+	‘2‘
+	[1] 0.5163468
+	‘3‘
+	[1] 1.246368
+
+Splitting a Data Frame Splitting a Data Frame
+
+	> library(datasets)
+	> head(airquality)
+	 Ozone    Solar.R    Wind    Temp    Month    Day
+	1 41 190 7.4 67 5 1
+	2 36 118 8.0 72 5 2
+	3 12 149 12.6 74 5 3
+	4 18 313 11.5 62 5 4
+	5 NA NA 14.3 56 5 5
+	6 28 NA 14.9 66 5 6
+
+**vapply  tapply**
+Whereas sapply() tries to 'guess' the correct format of the result, vapply()
+allows you to specify it explicitly. If the result doesn't match the format
+ you specify, vapply() will throw an error, causing the operation to stop.
+This can prevent significant problems in your code that might be caused by
+getting unexpected return values from sapply().
+
+**vapply() may perform faster than sapply() for large datasets.**
+
+```
+If we wish to be explicit about the format of the result we expect, we can
+| use vapply(flags, class, character(1)). The 'character(1)' argument tells R
+| that we expect the class function to return a character vector of length 1
+| when applied to EACH column of the flags dataset. Try it now.
+
+> vapply(flags, class, character(1))
+      name   landmass       zone       area population   language   religion 
+  "factor"  "integer"  "integer"  "integer"  "integer"  "integer"  "integer" 
+
+> vapply(flags, unique,numeric(1))
+Error in vapply(flags, unique, numeric(1)) : values must be length 1,
+ but FUN(X[[1]]) result is length 194
+> ok()
+
+| Keep up the great work!
+
+  |=========================                                            |  36%
+
+| Recall from the previous lesson that sapply(flags, class) will return a
+| character vector containing the class of each column in the dataset. Try
+| that again now to see the result.
+
+> sapply(flags, class)
+      name   landmass       zone       area population   language   religion 
+  "factor"  "integer"  "integer"  "integer"  "integer"  "integer"  "integer" 
+      bars    stripes    colours        red      green       blue       gold 
+ "integer"  "integer"  "integer"  "integer"  "integer"  "integer"  "integer" 
+     white      black     orange    mainhue    circles    crosses   saltires 
+ "integer"  "integer"  "integer"   "factor"  "integer"  "integer"  "integer" 
+  quarters   sunstars   crescent   triangle       icon    animate       text 
+ "integer"  "integer"  "integer"  "integer"  "integer"  "integer"  "integer" 
+   topleft   botright 
+  "factor"   "factor" 
+
+| All that hard work is paying off!
+
+  |============================                                         |  40%
+
+| If we wish to be explicit about the format of the result we expect, we can
+| use vapply(flags, class, character(1)). The 'character(1)' argument tells R
+| that we expect the class function to return a character vector of length 1
+| when applied to EACH column of the flags dataset. Try it now.
+
+> vapply(flags, class, character(1))
+      name   landmass       zone       area population   language   religion 
+  "factor"  "integer"  "integer"  "integer"  "integer"  "integer"  "integer" 
+      bars    stripes    colours        red      green       blue       gold 
+ "integer"  "integer"  "integer"  "integer"  "integer"  "integer"  "integer" 
+     white      black     orange    mainhue    circles    crosses   saltires 
+ "integer"  "integer"  "integer"   "factor"  "integer"  "integer"  "integer" 
+  quarters   sunstars   crescent   triangle       icon    animate       text 
+ "integer"  "integer"  "integer"  "integer"  "integer"  "integer"  "integer" 
+   topleft   botright 
+  "factor"   "factor" 
+
+| You are amazing!
+
+  |==============================                                       |  44%
+
+| Note that since our expectation was correct (i.e. character(1)), the
+| vapply() result is identical to the sapply() result -- a character vector of
+| column classes.
+
+...
+
+  |=================================                                    |  48%
+
+| You might think of vapply() as being 'safer' than sapply(), since it
+| requires you to specify the format of the output in advance, instead of just
+| allowing R to 'guess' what you wanted. In addition, vapply() may perform
+| faster than sapply() for large datasets. However, when doing data analysis
+| interactively (at the prompt), sapply() saves you some typing and will often
+| be good enough.
+
+...
+
+  |====================================                                 |  52%
+
+| As a data analyst, you'll often wish to split your data up into groups based
+| on the value of some variable, then apply a function to the members of each
+| group. The next function we'll look at, tapply(), does exactly that.
+
+...
+
+  |=======================================                              |  56%
+
+| Use ?tapply to pull up the documentation.
+
+> ?tapply
+
+| Perseverance, that's the answer.
+
+  |=========================================                            |  60%
+
+| The 'landmass' variable in our dataset takes on integer values between 1 and
+| 6, each of which represents a different part of the world. Use
+| table(flags$landmass) to see how many flags/countries fall into each group.
+
+> table(flags$landmass)
+
+ 1  2  3  4  5  6 
+31 17 35 52 39 20 
+
+| All that practice is paying off!
+
+  |============================================                         |  64%
+
+| The 'animate' variable in our dataset takes the value 1 if a country's flag
+| contains an animate image (e.g. an eagle, a tree, a human hand) and 0
+| otherwise. Use table(flags$animate) to see how many flags contain an animate
+| image.
+
+> table(flags$animate)
+
+  0   1 
+155  39 
+
+| That's correct!
+
+  |===============================================                      |  68%
+
+| This tells us that 39 flags contain an animate object (animate = 1) and 155
+| do not (animate = 0).
+
+...
+
+  |==================================================                   |  72%
+
+| If you take the arithmetic mean of a bunch of 0s and 1s, you get the
+| proportion of 1s. Use tapply(flags$animate, flags$landmass, mean) to apply
+| the mean function to the 'animate' variable separately for each of the six
+| landmass groups, thus giving us the proportion of flags containing an
+| animate image WITHIN each landmass group.
+
+> tapply(flags$animate,flags$landmass,mean)
+        1         2         3         4         5         6 
+0.4193548 0.1764706 0.1142857 0.1346154 0.1538462 0.3000000 
+
+| That's the answer I was looking for.
+
+  |====================================================                 |  76%
+
+| The first landmass group (landmass = 1) corresponds to North America and
+| contains the highest proportion of flags with an animate image (0.4194).
+
+...
+
+  |=======================================================              |  80%
+
+| Similarly, we can look at a summary of population values (in round millions)
+| for countries with and without the color red on their flag with
+| tapply(flags$population, flags$red, summary).
+
+> tapply(flags$population,flags$red,summary)
+$`0`
+   Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+   0.00    0.00    3.00   27.63    9.00  684.00 
+
+$`1`
+   Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+    0.0     0.0     4.0    22.1    15.0  1008.0 
+
+
+| That's the answer I was looking for.
+
+  |==========================================================           |  84%
+
+| What is the median population (in millions) for countries *without* the
+| color red on their flag?
+
+1: 3.0
+2: 9.0
+3: 4.0
+4: 22.1
+5: 0.0
+6: 27.6
+
+Selection: 1
+
+| Great job!
+
+  |=============================================================        |  88%
+
+| Lastly, use the same approach to look at a summary of population values for
+| each of the six landmasses.
+
+> tapply(flags$population,flags$landmass,summary)
+$`1`
+   Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+   0.00    0.00    0.00   12.29    4.50  231.00 
+
+$`2`
+   Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+   0.00    1.00    6.00   15.71   15.00  119.00 
+
+$`3`
+   Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+   0.00    0.00    8.00   13.86   16.00   61.00 
+
+$`4`
+   Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+  0.000   1.000   5.000   8.788   9.750  56.000 
+
+$`5`
+   Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+   0.00    2.00   10.00   69.18   39.00 1008.00 
+
+$`6`
+   Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+   0.00    0.00    0.00   11.30    1.25  157.00 
+
+
+| You are doing so well!
+
+  |===============================================================      |  92%
+
+| What is the maximum population (in millions) for the fourth landmass group
+| (Africa)?
+
+1: 5.00
+2: 56.00
+3: 119.0
+4: 157.00
+5: 1010.0
+
+Selection: 2
+
+| All that practice is paying off!
+
+  |==================================================================   |  96%
+
+| In this lesson, you learned how to use vapply() as a safer alternative to
+| sapply(), which is most helpful when writing your own functions. You also
+| learned how to use tapply() to split your data into groups based on the
+| value of some variable, then apply a function to each group. These functions
+| will come in handy on your quest to become a better data analyst.
+```

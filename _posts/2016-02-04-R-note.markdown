@@ -1,0 +1,205 @@
+---
+layout:     post
+title:      "R笔记之NA值处理"
+subtitle:   " \"NA,ggplot\""
+date:       2016-02-04 20:20:00
+author:     "Jacky"
+header-img: "img/post-bg-2015.jpg"
+tags:
+    - R笔记
+---
+
+
+
+去除NA值
+```
+方案一
+ggplot(aes(x=friend_count), data=subset(pf, !is.na(gender)))+
+        geom_histogram()+
+        scale_x_continuous(limits = c(0,1000), breaks = seq(0,1000,50))+
+        facet_wrap(~gender)
+方案二
+ggplot(aes(x=friend_count), data=na.omit(pf)))+  ##去除所有NA值
+        geom_histogram()+
+        scale_x_continuous(limits = c(0,1000), breaks = seq(0,1000,50))+
+        facet_wrap(~gender)
+```
+
+同时总结两组变量
+```
+> by(pf$www_likes, pf$gender, sum)
+pf$gender: female
+[1] 3507665
+--------------------------------------------------------- 
+pf$gender: male
+[1] 1430175
+
+> by(pf$friend_count,pf$gender,summary)
+
+pf$gender: female
+   Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+      0      37      96     242     244    4923 
+--------------------------------------------------------- 
+pf$gender: male
+   Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+      0      27      74     165     182    4917 
+```
+填充颜色，按年计算
+```
+ggplot(aes(x = tenure/365), data = pf) +
+        geom_histogram(binwidth = 0.1, color = "black", fill = "#099DD9")+
+        scale_x_continuous(limits = c(0,7), breaks = seq(1,7,0.5))
+```
+自定义lab
+```
+ggplot(aes(x = friend_count), data = subset(pf, !is.na(gender))) +
+        geom_histogram(binwidth = 10,color = 'black',fill = 'green')+
+        scale_x_continuous(limits = c(0,1000), breaks = seq(0, 1000, 50)) +
+        xlab('朋友数')+
+        ylab('满足该朋友数的人数')+
+        facet_wrap(~gender)
+
+qplot(x = friend_count, data = subset(pf, !is.na(gender)),
+      color = I("black"),
+      fill = I("green"),
+      xlab = "朋友数",
+      ylab = "满足该朋友数的人数")+
+        scale_x_continuous(limits = c(0,1000), breaks = seq(0,1000,50))+
+        facet_wrap(~gender)
+```
+同时打印多图
+```
+install.packages('gridExtra')
+library(gridExtra)
+
+p1<- qplot(x = friend_count,data = pf)
+p2<- qplot(x = log10(friend_count),data = pf)
+p3<- qplot(x = sqrt(friend_count),data = pf)
+grid.arrange(p1,p2,p3, ncol=1)
+
+另一种方法，使用ggplot()
+p1<- ggplot(aes(x = friend_count), data = pf) + geom_histogram()
+p2<- p1 + scale_x_log10()
+p3<- p1 + scale_x_sqrt()
+grid.arrange(p1,p2,p3, ncol = 1)
+```
+频率折线图
+```
+ggplot(aes(x = friend_count, y = ..count../sum(..count..)), ##百分数可用y=..density..
+       data = subset(pf, !is.na(gender)) +
+        geom_freqpoly(aes(color = gender)) +
+        scale_x_continuous(limits = c(0,1000), breaks = seq(0,1000,50))+
+        xlab("pengyoushu")+
+        ylab("zhanzongpengyoushubaifenbi")
+
+qplot(x = friend_count, y = ..count../sum(..count..), 
+      data = subset(pf, !is.na(gender)),
+      binwidth = 10, geom = "freqpoly", color = gender)+
+        scale_x_continuous(limits = c(0,1000), breaks = seq(0, 1000, 50))
+```
+剔除长尾coord_cartesian(), 而不用scale_y_countinous
+```
+ggplot(aes(x = gender, y = friendships_initiated), 
+       data = subset(pf, !is.na(gender)))+
+        geom_boxplot()+
+        coord_cartesian(ylim = c(0,150))
+```
+sum不能用于factor
+```
+> pf$mobile_check_in <- NA
+> pf$mobile_check_in <- ifelse(pf$mobile_likes > 0, 1, 0)
+> pf$mobile_check_in <- factor(pf$mobile_check_in)
+> summary(pf$mobile_check_in)
+    0     1 
+35056 63947 
+
+> sum(pf$mobile_check_in)  ##不能用于因子
+Error in Summary.factor(c(1L, 1L, 1L, 1L, 1L, 1L, 1L, 1L, 1L, 1L, 1L,  : 
+  ‘sum’ not meaningful for factors
+> length(pf$mobile_check_in) ##用length测量长度
+[1] 99003
+
+> by(summary(pf$mobile_check_in)/length(pf$mobile_check_in))
+Error in by.default(summary(pf$mobile_check_in)/length(pf$mobile_check_in)) : 
+  argument "INDICES" is missing, with no default
+> summary(pf$mobile_check_in)/length(pf$mobile_check_in)
+        0         1 
+0.3540903 0.6459097 
+
+> sum(pf$mobile_check_in == 1)/length(pf$mobile_check_in) ##此法甚棒！
+[1] 0.6459097
+```
+使用max、min比summary要精准
+```
+> by(diamonds$price, diamonds$cut, summary)
+diamonds$cut: Fair
+   Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+    337    2050    3282    4359    5206   18570 
+----------------------------------------------------------- 
+diamonds$cut: Good
+   Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+    327    1145    3050    3929    5028   18790 
+----------------------------------------------------------- 
+diamonds$cut: Very Good
+   Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+    336     912    2648    3982    5373   18820 
+----------------------------------------------------------- 
+diamonds$cut: Premium
+   Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+    326    1046    3185    4584    6296   18820 
+----------------------------------------------------------- 
+diamonds$cut: Ideal
+   Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+    326     878    1810    3458    4678   18810 
+> by(diamonds$price, diamonds$cut, max)
+diamonds$cut: Fair
+[1] 18574
+------------------------------------------------------ 
+diamonds$cut: Good
+[1] 18788
+------------------------------------------------------ 
+diamonds$cut: Very Good
+[1] 18818
+------------------------------------------------------ 
+diamonds$cut: Premium
+[1] 18823
+------------------------------------------------------ 
+diamonds$cut: Ideal
+[1] 18806
+```
+facet_wrap(~cut, scales = "free")
+```
+ggplot(aes(x = price), data = diamonds)+
+     geom_histogram(binwidth = 100)+
+     scale_x_continuous(breaks = seq(0,18000,1000))+
+     facet_wrap(~cut, scales = "free_x")
+```
+四分位间距
+```
+> by(diamonds$price, diamonds$color, IQR)
+diamonds$color: D
+[1] 3302.5
+------------------------------------------------------ 
+diamonds$color: E
+[1] 3121
+------------------------------------------------------ 
+diamonds$color: F
+[1] 3886.25
+------------------------------------------------------ 
+diamonds$color: G
+[1] 5117
+------------------------------------------------------ 
+diamonds$color: H
+[1] 4996.25
+------------------------------------------------------ 
+diamonds$color: I
+[1] 6081.25
+------------------------------------------------------ 
+diamonds$color: J
+[1] 5834.5
+```
+设置level
+```
+levels(data$age.range)
+levels(data$income.range)
+```
