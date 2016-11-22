@@ -52,7 +52,7 @@ kramdown:
 #disqus_username: _your_disqus_short_name_
 
 # Duoshuo settings
-disqus_username: jacky_fan
+duoshuo_username: jackyblog1
 # Share component is depend on Comment so we can NOT use share only.
 disqus_share: false                     # set to false if you want to use Comment without Sharing
 
@@ -64,7 +64,7 @@ disqus_share: false                     # set to false if you want to use Commen
 # ba_track_id: [your track id]
 
 # Google Analytics
-ga_track_id: 'UA-49627206-1'            # Format: UA-xxxxxx-xx
+ga_track_id: 'UA-87747113-1'            # Format: UA-xxxxxx-xx
 ga_domain: https://jacky-fan.github.io
 
 
