@@ -1,23 +1,22 @@
 # Site settings
-title: Jacky Blog
-SEOTitle: JackyFan的博客 | JK Blog
+title: Your Blog
+SEOTitle: 你的博客 | Your Blog
 header-img: img/home-bg.jpg
-email: jackyfan@yeah.net
-description: "关于城市、数据 | Jacky，Web & Mobile Lover，Front-End Engineer，UX Designer | 这里是 JackyFan 的个人博客，与你一起发现更大的世界。"
-keyword: "Jackyfan, 数据分析, 城市设计"
-url: "https://jacky-fan.github.io/"              # your host, for absolute URL
-baseurl: ""                             # for example, '/blog' if your blog hosted on 'host/blog'
+email: huxpro@gmail.com
+description: ""
+keyword: ""
+url: "http://huangxuan.me"              # your host, for absolute URL
+baseurl: "/huxblog-boilerplate"         # for example, '/blog' if your blog hosted on 'host/blog'
 
 
 
 # SNS settings
 RSS: false
-#weibo_username:     JackyFan
-zhihu_username:     jacky-fan-68
-github_username:    Jacky-Fan
-#twitter_username:  JackyFan
-#facebook_username:  JackyFan
-# linkedin_username:  firstname-lastname-idxxxx
+weibo_username:     huxpro
+zhihu_username:     huxpro
+github_username:    huxpro
+#twitter_username:  huxpro
+facebook_username:  huxpro
 
 
 
@@ -26,7 +25,7 @@ github_username:    Jacky-Fan
 highlighter: rouge
 permalink: pretty
 paginate: 10
-exclude: ["less","node_modules","Gruntfile.js","package.json","README.md","README.zh.md"]
+exclude: ["less","node_modules","Gruntfile.js","package.json","README.md"]
 anchorjs: true                          # if you want to customize anchor. check out line:181 of `post.html`
 
 
@@ -51,24 +50,26 @@ kramdown:
 #disqus_username: _your_disqus_short_name_
 
 # Duoshuo settings
-duoshuo_username: jackyblog1
+duoshuo_username: huxblog
 # Share component is depend on Comment so we can NOT use share only.
-disqus_share: false                     # set to false if you want to use Comment without Sharing
+duoshuo_share: true                     # set to false if you want to use Comment without Sharing
 
 
 
 
 # Analytics settings
+# Baidu Analytics
+ba_track_id: 4cc1f2d8f3067386cc5cdb626a202900
 # Google Analytics
-ga_track_id: 'UA-87747113-1'            # Format: UA-xxxxxx-xx
-ga_domain: https://jacky-fan.github.io
+ga_track_id: 'UA-49627206-1'            # Format: UA-xxxxxx-xx
+ga_domain: huangxuan.me
 
 
 
 # Sidebar settings
 sidebar: true                           # whether or not using Sidebar.
 sidebar-about-description: "写写代码，做做设计，看看产品。世界那么大，多玩玩看看。"
-sidebar-avatar: /img/avatar-jk.jpg      # use absolute URL, seeing it's used in both `/` and `/about/`
+sidebar-avatar: /img/avatar-hux.jpg      # use absolute URL, seeing it's used in both `/` and `/about/`
 
 
 
@@ -79,21 +80,21 @@ featured-condition-size: 1              # A tag will be featured if the size of 
 
 
 # Friends
-#friends: [
-#    {
-#        title: "Hux Blog",
-#        href: "http://huangxuan.me"
-#    },{
-#        title: "Foo",
- #       href: "#"
- #   },{
- #       title: "Bar",
- #       href: "#"
- #   },{
- #       title: "Example Friends",
- #       href: "#"
- #   },{
- #       title: "It helps SEO",
- #       href: "#"
-#    }
-#]
+friends: [
+    {
+        title: "Hux Blog",
+        href: "http://huangxuan.me"
+    },{
+        title: "Foo",
+        href: "#"
+    },{
+        title: "Bar",
+        href: "#"
+    },{
+        title: "Example Friends",
+        href: "#"
+    },{
+        title: "It helps SEO",
+        href: "#"
+    }
+]
