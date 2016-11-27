@@ -1,17 +1,13 @@
 ---
 layout: post
 title: "Iris Data Analysis - quantify the morphologic variation of three related species"
-subtitle:   " \"Iris,R实战\""
+subtitle:   " \"Iris,R瀹炴垬\""
 date:   2016-08-17 21:14:54
-categories: R数据分析
+author: "Jacky"
 header-img: "img/post-bg-2015.jpg"
-author: Jacky Fan
 tags: 
-     -R实战 
+     -R瀹炴垬 
 ---
-
-* content
-{:toc}
 
 # Descriptive Statistics - Exploration of data
 
@@ -276,84 +272,3 @@ summary(model1)
 ## Multiple R-squared:  0.9377,	Adjusted R-squared:  0.936 
 ## F-statistic: 542.1 on 2 and 72 DF,  p-value: < 2.2e-16
 ```
-可以看到截距估计为1.45，versicolor的斜率为2.88，virginica的斜率为4.07.
-判定系数为0.94，说明此模型解释力很强。
-
-```r
-# Other stats
-# SSR: Sum Squared Regression 回归平方和
-# SSE: Sum Squared Error 残差平方和
-# SST: Sum Squared Total 总平方和
-# SST = SSR + SSE
-# R^2=SSR/SST=1-SSE/SST = 0.94
-SSE=sum((irisTest$PetalLengthCm-predict1)^2)
-SST=sum((irisTest$PetalLengthCm-mean(irisTrain$PetalLengthCm))^2)
-SSE/SST
-```
-
-```
-## [1] 0.05627417
-```
-
-
-```r
-model2 <- lm(PetalLengthCm~.-Id, data = irisTrain)
-# prediction
-prediction2 <- predict(model2, newdata = irisTest)
-predictdata2 <- data.frame(PetalLengthCm=prediction2,
-                           SepalWidthCm=irisTest$SepalWidthCm)
-# Comparing out test set against prediction
-# Jitter included to allow us to see data points that are stacked
-ggplot(irisTest,aes(x=SepalWidthCm, y=PetalLengthCm))+
-        geom_point(aes(color="Test Set"))+
-        geom_point(data=predictdata2,aes(color="Actual Prediction"))+
-        ggtitle("Petal Length Vs Sepal Width")
-```
-
-![plot of chunk unnamed-chunk-19](figure/unnamed-chunk-19-1.png)
-
-```r
-summary(model2)
-```
-
-```
-## 
-## Call:
-## lm(formula = PetalLengthCm ~ . - Id, data = irisTrain)
-## 
-## Residuals:
-##      Min       1Q   Median       3Q      Max 
-## -0.80395 -0.13971  0.04525  0.20239  0.52274 
-## 
-## Coefficients:
-##                        Estimate Std. Error t value Pr(>|t|)    
-## (Intercept)            -1.06655    0.36097  -2.955 0.004278 ** 
-## SepalLengthCm           0.57337    0.07822   7.330 3.34e-10 ***
-## SepalWidthCm           -0.15921    0.11998  -1.327 0.188877    
-## PetalWidthCm            0.73939    0.19439   3.804 0.000305 ***
-## SpeciesIris-versicolor  1.39721    0.28007   4.989 4.36e-06 ***
-## SpeciesIris-virginica   1.80718    0.39822   4.538 2.33e-05 ***
-## ---
-## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
-## 
-## Residual standard error: 0.2866 on 69 degrees of freedom
-## Multiple R-squared:  0.9757,	Adjusted R-squared:  0.9739 
-## F-statistic: 553.9 on 5 and 69 DF,  p-value: < 2.2e-16
-```
-
-判定系数为0.975，说明此模型解释力比model1强。
-
-```r
-AIC(model1,model2)
-```
-
-```
-##        df      AIC
-## model1  4 97.70196
-## model2  7 33.14883
-```
-
-
-
-
-
