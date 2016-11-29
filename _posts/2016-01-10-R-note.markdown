@@ -393,6 +393,10 @@ getting unexpected return values from sapply().
 
 **vapply() may perform faster than sapply() for large datasets.**
 
+###ifelse
+hyper$target <- ifelse(hyper$target=="negative",0,1) 
+*将该列中的因子negative变成0，其他值变成1*
+
 ```
 If we wish to be explicit about the format of the result we expect, we can
 | use vapply(flags, class, character(1)). The 'character(1)' argument tells R

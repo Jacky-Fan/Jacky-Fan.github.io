@@ -1,0 +1,38 @@
+---
+layout: post
+title: "R笔记之数据抽样"
+subtitle:   " \"数据抽样，SMOTE\""
+date:   2016-02-13 21:04:54
+author: "Jacky"
+header-img: "img/post-bg-2015.jpg"
+tags: 
+     -R笔记 
+---
+
+# 数据采样
+样本：
+训练集（70%），用来估计模型。
+验证集（15%），用来确定网络结构或者控制模型复杂度的参数。
+测试集（15%），用来检验最终选择最优的模型的性能如何。
+
+样本少的时候，常留少部分做测试集。然后对其余N个样本采用**K折交叉验证法**。就是将样本打乱，然后均匀分成K份，轮流选择其中K-1份训练，剩余一份做验证，计算预测误差平方和，最后把K次的预测误差平方和再做平均作为选择最优模型结构的依据。
+
+##类失衡处理方法：SMOTE
+有一个系统的构造人工数据样本的方法SMOTE（Synthetic Minority Over-sampling Technique）
+
+DMwR包中的**SMOTE()**函数
+主要参数有如下三个：
+data(iris)
+data<-iris[,c(1,2,5)]
+data$Species <- factor(ifelse(data$Species == "setosa","rare","common"))
+newdata <- SMOTE(Species~.,data, perc.over = 500, perc.under =300)
+**perc.over=500**:过采样时，多生成少数类的样本倍数（151+151*500%）；
+
+**k**:过采样中使用k近邻算法生成少数类样本时的k值，默认是5；
+
+**perc.under=300**:欠采样时，对应每个生成的少数类样本，选择原始数据多数类样本的个数(151*500%*300%)。
+
+
+## 数据随机抽样sample函数
+
+sample（x, size, replace = F, prob = NULL）其中x是数值型向量，size是抽样个数，replace表示是否放回抽样。

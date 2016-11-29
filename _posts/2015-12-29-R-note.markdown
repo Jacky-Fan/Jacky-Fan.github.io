@@ -31,7 +31,11 @@ tags:
     toupper()将字符转换为大写
     chartr("A","B",x):字符串x中使用B替换A
     na.omit()，移除所有含有缺失值的观测（行删除，listwise deletion）
-    
+    weighted.mean(x,w,...,na.rm=FALSE)加权平均值
+    sort(x)对x进行升序排序
+    quantile(x, probs=seq(0,1,0.2)) 以20%为单位的百分位数
+    prop.table(table(x)) 求x数据中各类所占比例
+
  paste()
 
 	paste("Var",1:5,sep="")
