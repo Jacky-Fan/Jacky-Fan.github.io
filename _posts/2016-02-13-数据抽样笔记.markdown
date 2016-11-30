@@ -9,7 +9,7 @@ tags:
      -R笔记 
 ---
 
-# 数据采样
+## 数据采样
 样本：
 训练集（70%），用来估计模型。
 验证集（15%），用来确定网络结构或者控制模型复杂度的参数。
@@ -17,15 +17,17 @@ tags:
 
 样本少的时候，常留少部分做测试集。然后对其余N个样本采用**K折交叉验证法**。就是将样本打乱，然后均匀分成K份，轮流选择其中K-1份训练，剩余一份做验证，计算预测误差平方和，最后把K次的预测误差平方和再做平均作为选择最优模型结构的依据。
 
-##类失衡处理方法：SMOTE
+###类失衡处理方法：SMOTE
 有一个系统的构造人工数据样本的方法SMOTE（Synthetic Minority Over-sampling Technique）
 
 DMwR包中的**SMOTE()**函数
 主要参数有如下三个：
-data(iris)
-data<-iris[,c(1,2,5)]
-data$Species <- factor(ifelse(data$Species == "setosa","rare","common"))
-newdata <- SMOTE(Species~.,data, perc.over = 500, perc.under =300)
+
+    data(iris)
+    data<-iris[,c(1,2,5)]
+    data$Species <- factor(ifelse(data$Species == "setosa","rare","common"))
+
+    newdata <- SMOTE(Species~.,data, perc.over = 500, perc.under =300)
 **perc.over=500**:过采样时，多生成少数类的样本倍数（151+151*500%）；
 
 **k**:过采样中使用k近邻算法生成少数类样本时的k值，默认是5；
@@ -33,6 +35,107 @@ newdata <- SMOTE(Species~.,data, perc.over = 500, perc.under =300)
 **perc.under=300**:欠采样时，对应每个生成的少数类样本，选择原始数据多数类样本的个数(151*500%*300%)。
 
 
-## 数据随机抽样sample函数
+### 数据随机抽样sample函数
 
 sample（x, size, replace = F, prob = NULL）其中x是数值型向量，size是抽样个数，replace表示是否放回抽样。
+
+
+###数据随机抽样-creatDataPartition函数
+
+caret包中的createDataPartition函数，可以快速实现数据按照因子变量的类别进行快速等比例抽样。
+
+    createDataPartitio(y, times=1, p=0.5, list= T, groups=min(5,length(y)))
+
+    其中y是一个向量，times表示需要进行抽样的次数1，p表示需要从数据中抽取的样本比例50%，list表示结果是否是list形式，默认为TRUE，groups：表示输出变量为数值型数据，则默认按分位数分组进行取样。
+
+*提取下标集*
+
+splitindex <- createDataPartition(iris$Species, times = 1, p=0.1,list = FALSE)
+
+*提取符合子集*
+
+sample <- iris[splitindex,]
+
+*查看Species变量中各类别的个数和占比*
+
+table(sample$Species);
+prop.table(table(sample$Species))
+
+### 用于交叉验证的样本抽样-creatFolds函数
+
+caret包中的createFolds函数是可以直接按照某个变量等比例将数据随机分成k份。其基本形式为：
+
+    createFolds(y, k=10, list=TRUE, returnTrain=FALSE)
+
+    其中y是我们要依据分类：k指定k重交叉验证的样本，默认10重，每重的样本量为总量/k; list是否列表或矩阵的形式存储随机抽取的索引号，默认为TRUE; returnTrain是否返回抽样的真实值，默认返回样本的索引值。
+
+createFolds(iris[,5], k=2, list = T, returnTrain = FALSE) #每重样本量为75
+createMultiFolds(iris[,5], k=2, times = 2) #随机生成2组样本，每周又有2重样本，且样本量为75
+
+使用有放回的方法抽样(BootStrap)-createResample函数
+createResample(iris[,5], times = 2, list = TRUE) #生成2组有放回的样本
+
+
+### 数据标准化-preProcess()函数
+
+caret包中的preProcess()函数就非常灵活的实现数据的标准化。
+
+    preProcess(x,method=c("center","scale"), thresh=0.95,pcaComp=NULL,na.remove=TRUE,k=5,knnSummary=mean, outcome=NULL, fudge=.2, numUnique=3, verbose=FALSE,...)
+
+    x:为一个矩阵或数据框，对于非数值型变量将被忽略
+
+    method:指定数据标准化的方法，默认为"center"和 "scale"。其中center表示预测变量值减去均值；scale表示预测变量值除以标准差，故默认标准化方法就是(x-mu)/std。如果使用range方法，则数据标准为[0,1]的范围，即(x-min)/(max-min)。
+
+    thresh:如果使用主成分分析（PCA)方法，该参数指定累计方差至少达到0.95
+
+    pcaComp:如果使用主成分分析（PCA)方法，该参数可指定保留的主成分个数，该参数的优先级高于thresh
+
+    na.remove:默认剔除缺失值数据
+
+    k:如果使用k-近邻方法填补缺失值的话，可以指定具体的k值，默认为5
+
+    knnSummary:使用k个近邻的均值替代缺失值
+
+    outcome:指定数据集的输出变量，当使用BOX-COX变换数据时，该参数需要指定输出变量
+
+    fudge:指定BOX-COX变换的lambda值波动范围
+
+    numUnique:指定多少个唯一值需要因变量y估计BOX-COX转换
+
+    verbose:指定是否需要输出详细的结果
+
+    object:为preProcess对象
+
+    newdata:指定需要处理的新数据集
+
+**数据标准化变换**
+
+*采用(x-mu)/std的标准化方法，与scale()函数效果一样*
+
+    standard <- preProcess(iris)
+    head(predict(standard, iris))
+    head(scale(iris[,1:4]))
+
+*采用(x-min(x))/(max(x)-min(x))的标准化方法*
+
+    standard <- preProcess(iris, method = 'range')
+    head(predict(standard, iris))
+    fun <- function(x) (x-min(x))/(max(x)-min(x))
+    head(sapply(iris[,1:4], fun))
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
