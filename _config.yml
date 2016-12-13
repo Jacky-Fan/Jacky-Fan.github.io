@@ -37,6 +37,7 @@ gems: [jekyll-paginate]
 
 
 
+
 # Markdown settings
 # replace redcarpet to kramdown,
 # although redcarpet can auto highlight code, the lack of header-id make the catalog impossible, so I switch to kramdown
@@ -59,9 +60,11 @@ disqus_share: false                     # set to false if you want to use Commen
 
 
 # Analytics settings
+# Baidu Analytics
+# ba_track_id: 4cc1f2d8f3067386cc5cdb626a202900
 # Google Analytics
-ga_track_id: 'UA-87747113-1'            # Format: UA-xxxxxx-xx
-ga_domain: https://jacky-fan.github.io
+# ga_track_id: 'UA-49627206-1'            # Format: UA-xxxxxx-xx
+ga_domain: jacky-fan.github.io
 
 
 
@@ -79,21 +82,12 @@ featured-condition-size: 1              # A tag will be featured if the size of 
 
 
 # Friends
-#friends: [
-#    {
-#        title: "Hux Blog",
-#        href: "http://huangxuan.me"
-#    },{
-#        title: "Foo",
- #       href: "#"
- #   },{
- #       title: "Bar",
- #       href: "#"
- #   },{
- #       title: "Example Friends",
- #       href: "#"
- #   },{
- #       title: "It helps SEO",
- #       href: "#"
-#    }
-#]
+friends: [
+    {
+        title: "Hello",
+        href: "#"
+    },{
+        title: "World",
+        href: "#"
+    }
+]
