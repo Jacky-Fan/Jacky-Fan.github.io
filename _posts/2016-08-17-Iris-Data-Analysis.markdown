@@ -114,7 +114,7 @@ par(mfrow = c(2,2))
 for(i in 2:5) boxplot(iris.kag[,i] ~ Species,data=iris.kag, main=names(iris.kag[i]))
 ```
 
-![plot of chunk unnamed-chunk-7](figure/unnamed-chunk-7-1.png)
+![plot of chunk unnamed-chunk-7](http://oiqvvwjga.bkt.clouddn.com/Iris-Data-Analysis/unnamed-chunk-7-1.png)
 
 
 ```r
@@ -127,7 +127,7 @@ ggplot(iris.kag,aes(x=SepalLengthCm))+
          theme_economist() + facet_wrap(~Species)
 ```
 
-![plot of chunk unnamed-chunk-8](figure/unnamed-chunk-8-1.png)
+![plot of chunk unnamed-chunk-8](http://oiqvvwjga.bkt.clouddn.com/Iris-Data-Analysis/unnamed-chunk-8-1.png)
 
 ```r
 # histgoram
@@ -136,7 +136,7 @@ ggplot(iris.kag,aes(x=SepalLengthCm))+
         scale_fill_gradient("Count", low="green", high="red")
 ```
 
-![plot of chunk unnamed-chunk-9](figure/unnamed-chunk-9-1.png)
+![plot of chunk unnamed-chunk-9](http://oiqvvwjga.bkt.clouddn.com/Iris-Data-Analysis/unnamed-chunk-9-1.png)
 
 ```r
 # histgoram count by species
@@ -145,7 +145,7 @@ ggplot(iris.kag, aes(x=PetalLengthCm, fill = factor(Species)))+
         scale_fill_discrete(name="Species")
 ```
 
-![plot of chunk unnamed-chunk-9](figure/unnamed-chunk-9-2.png)
+![plot of chunk unnamed-chunk-9](http://oiqvvwjga.bkt.clouddn.com/Iris-Data-Analysis/unnamed-chunk-9-2.png)
 
 
 ```r
@@ -155,7 +155,7 @@ ggplot(data = iris.kag,aes(x = SepalLengthCm,color = Species,linetype=Species))+
         scale_color_economist() + theme_economist()
 ```
 
-![plot of chunk unnamed-chunk-10](figure/unnamed-chunk-10-1.png)
+![plot of chunk unnamed-chunk-10](http://oiqvvwjga.bkt.clouddn.com/Iris-Data-Analysis/unnamed-chunk-10-1.png)
 
 
 ```r
@@ -165,7 +165,7 @@ ggplot(iris.kag,aes(x=Species, y=SepalLengthCm, fill=Species))+
         scale_fill_discrete(name="Species")
 ```
 
-![plot of chunk unnamed-chunk-11](figure/unnamed-chunk-11-1.png)
+![plot of chunk unnamed-chunk-11](http://oiqvvwjga.bkt.clouddn.com/Iris-Data-Analysis/unnamed-chunk-11-1.png)
 
 
 ```r
@@ -176,7 +176,7 @@ ggplot(iris.kag,aes(x=Species, y=SepalLengthCm,
         scale_color_brewer(palette="Set1")+theme_economist()
 ```
 
-![plot of chunk unnamed-chunk-12](figure/unnamed-chunk-12-1.png)
+![plot of chunk unnamed-chunk-12](http://oiqvvwjga.bkt.clouddn.com/Iris-Data-Analysis/unnamed-chunk-12-1.png)
 
 # statistical model - classfication
 
@@ -209,7 +209,7 @@ cov(iris.kag[, 2:5])
 corrgram(iris.kag[,2:5])
 ```
 
-![plot of chunk unnamed-chunk-13](figure/unnamed-chunk-13-1.png)
+![plot of chunk unnamed-chunk-13](http://oiqvvwjga.bkt.clouddn.com/Iris-Data-Analysis/unnamed-chunk-13-1.png)
 longer petals generally mean wider petals,but longer Sepal length means longer and wider petals!
 
 ```r
@@ -217,7 +217,7 @@ longer petals generally mean wider petals,but longer Sepal length means longer a
 plot(iris.kag, col=iris.kag$Species)
 ```
 
-![plot of chunk unnamed-chunk-14](figure/unnamed-chunk-14-1.png)
+![plot of chunk unnamed-chunk-14](http://oiqvvwjga.bkt.clouddn.com/Iris-Data-Analysis/unnamed-chunk-14-1.png)
 
 
 ```r
@@ -226,7 +226,7 @@ ggplot(iris.kag, aes(x=SepalWidthCm, y=SepalLengthCm))+
         ggtitle("Sepal Length Vs Sepal Width")
 ```
 
-![plot of chunk unnamed-chunk-15](figure/unnamed-chunk-15-1.png)
+![plot of chunk unnamed-chunk-15](http://oiqvvwjga.bkt.clouddn.com/Iris-Data-Analysis/unnamed-chunk-15-1.png)
 
 ```r
 set.seed(88) # is used to set for the pseudo random
@@ -245,7 +245,7 @@ ggplot(irisTest, aes(x=Species, y=PetalLengthCm))+
         ggtitle("Petal Length Vs Species")
 ```
 
-![plot of chunk unnamed-chunk-16](figure/unnamed-chunk-16-1.png)
+![plot of chunk unnamed-chunk-16](http://oiqvvwjga.bkt.clouddn.com/Iris-Data-Analysis/unnamed-chunk-16-1.png)
 
 ```r
 summary(model1)
