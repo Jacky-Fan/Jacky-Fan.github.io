@@ -6,7 +6,7 @@ date:   2016-08-17 21:14:54
 author: "Jacky"
 header-img: "img/post-bg-2015.jpg"
 tags: 
-     -R实战 
+     R实战 
 ---
 
 # Descriptive Statistics - Exploration of data

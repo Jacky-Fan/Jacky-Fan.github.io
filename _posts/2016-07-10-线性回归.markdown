@@ -1,0 +1,363 @@
+---
+layout:     post
+title:      "线性回归模型"
+subtitle:   " \"多项式回归,多元线性回归,广义线性模型\""
+date:       2016-07-10 13:00:00
+author:     "Jacky"
+header-img: "img/post-bg-2015.jpg"
+tags:
+    R实战
+---
+
+
+
+```r
+# 求回归系数和判定系数拟合度
+estmate <- function(x,y){
+  mean.x <- mean(x)
+  mean.y <- mean(y)
+  sxx <- sum((x-mean.x)^2)
+  syy <- sum((y-mean.y)^2)
+  sxy <- sum((y-mean.y)*(x-mean.x))
+  #计算回归系数
+  alpha2 <- sxy/sxx
+  alpha1 <- mean.y-alpha2*mean.x
+  #计算回归系数的标准差
+  n <- length(x)
+  sigma <- sqrt(sum((y-alpha1-alpha2*x)^2)/(n-2))
+  # 计算总离差平方和、回归平方和、残差平方和
+  forecast.y <- alpha1+alpha2*x
+  sst <- sum((y-mean.y)^2)
+  ssa <- sum((forecast.y-mean.y)^2)
+  sse <- sum((y-forecast.y)^2)
+  # 计算判定系数R平方和
+  R.square <- ssa/sst
+  R.square2 <- sxy^2/(sxx*syy) # 为相关系数的平方
+  # 返回参数估计，R平方和
+  return(c(alpha1,alpha2,sigma,R.square,R.square2))
+}
+```
+
+```r
+attach(women)
+```
+
+```
+## The following objects are masked from women (pos = 4):
+## 
+##     height, weight
+```
+
+```
+## The following objects are masked from women (pos = 5):
+## 
+##     height, weight
+```
+
+```r
+estmate(height,weight)
+```
+
+```
+## [1] -87.5166667   3.4500000   1.5250053   0.9910098   0.9910098
+```
+
+```r
+# 利用lm函数
+fit<-lm(weight~height) # 建立简单线性回归模型
+summary(fit)   # 查看模型
+```
+
+```
+## 
+## Call:
+## lm(formula = weight ~ height)
+## 
+## Residuals:
+##     Min      1Q  Median      3Q     Max 
+## -1.7333 -1.1333 -0.3833  0.7417  3.1167 
+## 
+## Coefficients:
+##              Estimate Std. Error t value Pr(>|t|)    
+## (Intercept) -87.51667    5.93694  -14.74 1.71e-09 ***
+## height        3.45000    0.09114   37.85 1.09e-14 ***
+## ---
+## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+## 
+## Residual standard error: 1.525 on 13 degrees of freedom
+## Multiple R-squared:  0.991,	Adjusted R-squared:  0.9903 
+## F-statistic:  1433 on 1 and 13 DF,  p-value: 1.091e-14
+```
+
+```r
+# 多项式回归
+fit2<-lm(weight~height+I(height^2))
+summary(fit2)
+```
+
+```
+## 
+## Call:
+## lm(formula = weight ~ height + I(height^2))
+## 
+## Residuals:
+##      Min       1Q   Median       3Q      Max 
+## -0.50941 -0.29611 -0.00941  0.28615  0.59706 
+## 
+## Coefficients:
+##              Estimate Std. Error t value Pr(>|t|)    
+## (Intercept) 261.87818   25.19677  10.393 2.36e-07 ***
+## height       -7.34832    0.77769  -9.449 6.58e-07 ***
+## I(height^2)   0.08306    0.00598  13.891 9.32e-09 ***
+## ---
+## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+## 
+## Residual standard error: 0.3841 on 12 degrees of freedom
+## Multiple R-squared:  0.9995,	Adjusted R-squared:  0.9994 
+## F-statistic: 1.139e+04 on 2 and 12 DF,  p-value: < 2.2e-16
+```
+
+```r
+plot(height,weight)
+lines(height,fitted(fit2),col="red")
+```
+
+![plot of chunk unnamed-chunk-5](http://oiqvvwjga.bkt.clouddn.com/linear%20regressionunnamed-chunk-5-1.png)
+
+```r
+# 多元线性回归
+# 以基础包中的state.x77数据集为例，我们想探究一个州的犯罪率和其他因素的关系，包括
+# 人口、文盲率、平均收入和结霜天数（温度在冰点以下的平均天数）。
+# 因为lm()函数需要一个数据框（state.x77数据集是矩阵），为了以后处理方便，你需要做如下转化：
+states<-as.data.frame(state.x77[,c("Murder", "Population","Illiteracy","Income", "Frost")])
+# 检查变量间的相关性
+cor(states)
+```
+
+```
+##                Murder Population Illiteracy     Income      Frost
+## Murder      1.0000000  0.3436428  0.7029752 -0.2300776 -0.5388834
+## Population  0.3436428  1.0000000  0.1076224  0.2082276 -0.3321525
+## Illiteracy  0.7029752  0.1076224  1.0000000 -0.4370752 -0.6719470
+## Income     -0.2300776  0.2082276 -0.4370752  1.0000000  0.2262822
+## Frost      -0.5388834 -0.3321525 -0.6719470  0.2262822  1.0000000
+```
+
+```r
+library(car)
+scatterplotMatrix(states,spread=FALSE,main="Scatter Plot Matrix")
+```
+
+![plot of chunk unnamed-chunk-7](http://oiqvvwjga.bkt.clouddn.com/linear%20regressionunnamed-chunk-7-1.png)
+
+```r
+# 现在使用lm()函数拟合多元线性回归模型
+fit<-lm(Murder~.,data=states)
+summary(fit)
+```
+
+```
+## 
+## Call:
+## lm(formula = Murder ~ ., data = states)
+## 
+## Residuals:
+##     Min      1Q  Median      3Q     Max 
+## -4.7960 -1.6495 -0.0811  1.4815  7.6210 
+## 
+## Coefficients:
+##              Estimate Std. Error t value Pr(>|t|)    
+## (Intercept) 1.235e+00  3.866e+00   0.319   0.7510    
+## Population  2.237e-04  9.052e-05   2.471   0.0173 *  
+## Illiteracy  4.143e+00  8.744e-01   4.738 2.19e-05 ***
+## Income      6.442e-05  6.837e-04   0.094   0.9253    
+## Frost       5.813e-04  1.005e-02   0.058   0.9541    
+## ---
+## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+## 
+## Residual standard error: 2.535 on 45 degrees of freedom
+## Multiple R-squared:  0.567,	Adjusted R-squared:  0.5285 
+## F-statistic: 14.73 on 4 and 45 DF,  p-value: 9.133e-08
+```
+
+```r
+# 逐步回归
+fit.step<-step(fit)
+```
+
+```
+## Start:  AIC=97.75
+## Murder ~ Population + Illiteracy + Income + Frost
+## 
+##              Df Sum of Sq    RSS     AIC
+## - Frost       1     0.021 289.19  95.753
+## - Income      1     0.057 289.22  95.759
+## <none>                    289.17  97.749
+## - Population  1    39.238 328.41 102.111
+## - Illiteracy  1   144.264 433.43 115.986
+## 
+## Step:  AIC=95.75
+## Murder ~ Population + Illiteracy + Income
+## 
+##              Df Sum of Sq    RSS     AIC
+## - Income      1     0.057 289.25  93.763
+## <none>                    289.19  95.753
+## - Population  1    43.658 332.85 100.783
+## - Illiteracy  1   236.196 525.38 123.605
+## 
+## Step:  AIC=93.76
+## Murder ~ Population + Illiteracy
+## 
+##              Df Sum of Sq    RSS     AIC
+## <none>                    289.25  93.763
+## - Population  1    48.517 337.76  99.516
+## - Illiteracy  1   299.646 588.89 127.311
+```
+
+```r
+summary(fit.step)
+```
+
+```
+## 
+## Call:
+## lm(formula = Murder ~ Population + Illiteracy, data = states)
+## 
+## Residuals:
+##     Min      1Q  Median      3Q     Max 
+## -4.7652 -1.6561 -0.0898  1.4570  7.6758 
+## 
+## Coefficients:
+##              Estimate Std. Error t value Pr(>|t|)    
+## (Intercept) 1.652e+00  8.101e-01   2.039  0.04713 *  
+## Population  2.242e-04  7.984e-05   2.808  0.00724 ** 
+## Illiteracy  4.081e+00  5.848e-01   6.978 8.83e-09 ***
+## ---
+## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+## 
+## Residual standard error: 2.481 on 47 degrees of freedom
+## Multiple R-squared:  0.5668,	Adjusted R-squared:  0.5484 
+## F-statistic: 30.75 on 2 and 47 DF,  p-value: 2.893e-09
+```
+
+```r
+# 回归诊断
+# 标准方法
+fit<-lm(weight~height,data=women)
+par(mfrow=c(2,2))
+plot(fit)
+```
+
+![plot of chunk unnamed-chunk-10](http://oiqvvwjga.bkt.clouddn.com/linear%20regressionunnamed-chunk-10-1.png)
+
+```r
+par(mfrow=c(1,1))
+```
+
+```r
+# 广义线性模型(GLM)
+# column.2c.dat:V7-正常（100人，代码为NO-normal,不正常(210人，AB-abnormal)
+# 下面代码用logistic回归来拟合column.2C.dat数据(包括读入数据)
+# logistic回归在glm中属于binomial族，默认连接函数(link)为logit函数:
+w2=read.table("column.2C.dat")
+head(w2)
+```
+
+```
+##      V1    V2    V3    V4     V5    V6 V7
+## 1 63.03 22.55 39.61 40.48  98.67 -0.25 AB
+## 2 39.06 10.06 25.02 29.00 114.41  4.56 AB
+## 3 68.83 22.22 50.09 46.61 105.99 -3.53 AB
+## 4 69.30 24.65 44.31 44.64 101.87 11.21 AB
+## 5 49.71  9.65 28.32 40.06 108.17  7.92 AB
+## 6 40.25 13.92 25.12 26.33 130.33  2.23 AB
+```
+
+```r
+ch=lm(V6~.,w2[-116,])
+w2[116,6]=predict(ch,w2[116,-6]) # 50.79539
+a=glm(V7~.,w2,family="binomial") # 等价于glm(V7~.,w2,family=binomial(link="logit"))
+b=step(a) #做逐步回归筛选变量
+```
+
+```
+## Start:  AIC=192.83
+## V7 ~ V1 + V2 + V3 + V4 + V5 + V6
+## 
+##        Df Deviance    AIC
+## - V4    1   178.98 190.98
+## - V1    1   178.98 190.98
+## - V2    1   178.98 190.98
+## <none>      178.83 192.83
+## - V3    1   180.98 192.98
+## - V5    1   209.40 221.40
+## - V6    1   302.31 314.31
+## 
+## Step:  AIC=190.98
+## V7 ~ V1 + V2 + V3 + V5 + V6
+## 
+##        Df Deviance    AIC
+## <none>      178.98 190.98
+## - V3    1   181.05 191.05
+## - V1    1   189.09 199.09
+## - V2    1   202.23 212.23
+## - V5    1   209.45 219.45
+## - V6    1   303.45 313.45
+```
+
+```r
+summary(b) #输出回归系数
+```
+
+```
+## 
+## Call:
+## glm(formula = V7 ~ V1 + V2 + V3 + V5 + V6, family = "binomial", 
+##     data = w2)
+## 
+## Deviance Residuals: 
+##      Min        1Q    Median        3Q       Max  
+## -2.19329  -0.37733  -0.02971   0.40452   2.69386  
+## 
+## Coefficients:
+##              Estimate Std. Error z value Pr(>|z|)    
+## (Intercept) -14.74316    3.20375  -4.602 4.19e-06 ***
+## V1            0.08323    0.02416   3.445 0.000571 ***
+## V2           -0.16219    0.03586  -4.523 6.10e-06 ***
+## V3            0.02729    0.01953   1.397 0.162357    
+## V5            0.10493    0.02271   4.619 3.85e-06 ***
+## V6           -0.17023    0.02336  -7.288 3.15e-13 ***
+## ---
+## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+## 
+## (Dispersion parameter for binomial family taken to be 1)
+## 
+##     Null deviance: 389.86  on 309  degrees of freedom
+## Residual deviance: 178.98  on 304  degrees of freedom
+## AIC: 190.98
+## 
+## Number of Fisher Scoring iterations: 7
+```
+
+```r
+# 由于拟合结果是给每个观测值一个概率值，下面以0.5作为分类界限：
+z=(predict(b,w2,type="response")>0.5)
+u=rep("NO",310);u[!z]="AB" # 把预测结果转换成原先的值(AB或NO)
+(zz=table(w2[,7],u))  # 2乘2矩阵，对角线外的数目为分错的数目
+```
+
+```
+##     u
+##       AB  NO
+##   AB 186  24
+##   NO  22  78
+```
+
+```r
+(sum(zz)-sum(diag(zz)))/sum(zz) # 计算错判率
+```
+
+```
+## [1] 0.1483871
+```
+

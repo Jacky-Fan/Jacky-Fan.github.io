@@ -1,0 +1,544 @@
+---
+layout:     post
+title:      "信用卡评分模型"
+subtitle:   " \"Credit card, scoring model\""
+date:       2016-09-10 16:30:00
+author:     "Jacky"
+header-img: "img/post-bg-2015.jpg"
+tags:
+    R实战
+---
+
+```r
+# 数据的获取和整合
+# 导入数据 
+traindata <- read.csv("cs-training.csv")
+getwd()
+```
+
+```
+## [1] "C:/Users/JACKY/Documents"
+```
+
+```r
+# 剔除id列
+traindata <- traindata[,-1]
+# 对变量进行重新命名
+colnames(traindata) <- c('y',paste0('x',1:10))
+# 查看数据结构
+
+str(traindata)
+```
+
+```
+## 'data.frame':	150000 obs. of  11 variables:
+##  $ y  : int  1 0 0 0 0 0 0 0 0 0 ...
+##  $ x1 : num  0.766 0.957 0.658 0.234 0.907 ...
+##  $ x2 : int  45 40 38 30 49 74 57 39 27 57 ...
+##  $ x3 : int  2 0 1 0 1 0 0 0 0 0 ...
+##  $ x4 : num  0.803 0.1219 0.0851 0.036 0.0249 ...
+##  $ x5 : int  9120 2600 3042 3300 63588 3500 NA 3500 NA 23684 ...
+##  $ x6 : int  13 4 2 5 7 3 8 8 2 9 ...
+##  $ x7 : int  0 0 1 0 0 0 0 0 0 0 ...
+##  $ x8 : int  6 0 0 0 1 1 3 0 0 4 ...
+##  $ x9 : int  0 0 0 0 0 0 0 0 0 0 ...
+##  $ x10: int  2 1 0 0 0 1 0 0 NA 2 ...
+```
+
+
+```r
+# 缺失值处理
+# 查看缺失值模式
+library(mice)
+library(VIM)
+md.pattern(traindata)
+```
+
+```
+##        y x1 x2 x3 x4 x6 x7 x8 x9  x10    x5      
+## 120269 1  1  1  1  1  1  1  1  1    1     1     0
+##  25807 1  1  1  1  1  1  1  1  1    1     0     1
+##   3924 1  1  1  1  1  1  1  1  1    0     0     2
+##        0  0  0  0  0  0  0  0  0 3924 29731 33655
+```
+
+
+```r
+aggr(traindata,prop=F,numbers=T)
+```
+
+![plot of chunk unnamed-chunk-3](http://oiqvvwjga.bkt.clouddn.com/Credit%20card%20scoring%20modelunnamed-chunk-3-1.png)
+
+
+```r
+matrixplot(traindata)
+```
+
+
+![plot of chunk unnamed-chunk-4](http://oiqvvwjga.bkt.clouddn.com/Credit%20card%20scoring%20modelunnamed-chunk-4-1.png)
+
+
+```r
+# # 因为缺失值所占比例较高，直接移除会损失大量观测，因此并不是最合适的方法。在这里，我们使用KNN方法对缺失值进行填补。
+# library(DMwR)
+# traindata <- knnImputation(traindata,k=10,meth = "weighAvg")
+# # 随机森林插补法
+# library(missForest)
+# mis.model <- missForest(traindata)
+# 中位数替补法
+library(caret)
+imputation_m <- preProcess(traindata,method = "medianImpute")
+traindata <- predict(imputation_m,traindata)
+str(traindata)
+```
+
+```
+## 'data.frame':	150000 obs. of  11 variables:
+##  $ y  : int  1 0 0 0 0 0 0 0 0 0 ...
+##  $ x1 : num  0.766 0.957 0.658 0.234 0.907 ...
+##  $ x2 : int  45 40 38 30 49 74 57 39 27 57 ...
+##  $ x3 : int  2 0 1 0 1 0 0 0 0 0 ...
+##  $ x4 : num  0.803 0.1219 0.0851 0.036 0.0249 ...
+##  $ x5 : num  9120 2600 3042 3300 63588 ...
+##  $ x6 : int  13 4 2 5 7 3 8 8 2 9 ...
+##  $ x7 : int  0 0 1 0 0 0 0 0 0 0 ...
+##  $ x8 : int  6 0 0 0 1 1 3 0 0 4 ...
+##  $ x9 : int  0 0 0 0 0 0 0 0 0 0 ...
+##  $ x10: num  2 1 0 0 0 1 0 0 0 2 ...
+```
+
+
+```r
+# 异常值分析及处理
+unique(traindata$x2)
+```
+
+```
+##  [1]  45  40  38  30  49  74  57  39  27  51  46  76  64  78  53  43  25
+## [18]  32  58  50  69  24  28  62  42  75  26  52  41  81  31  68  70  73
+## [35]  29  55  35  72  60  67  36  56  37  66  83  34  44  48  61  80  47
+## [52]  59  77  63  54  33  79  65  86  92  23  87  71  22  90  97  84  82
+## [69]  91  89  85  88  21  93  96  99  94  95 101  98 103 102 107 105   0
+## [86] 109
+```
+
+
+```r
+# 可以看到年龄中存在0值，显然是异常值，予以剔除。
+traindata <- traindata[!traindata$x2==0,]
+# 查看x3、x7、x9三个变量的箱线图
+par(mfrow=c(1,3))
+for(i in c(4,8,10)){
+  boxplot(traindata[,i],col=i,main=colnames(traindata)[i])
+}
+```
+
+![plot of chunk unnamed-chunk-7](http://oiqvvwjga.bkt.clouddn.com/Credit%20card%20scoring%20modelunnamed-chunk-7-1.png)
+
+
+```r
+par(mfrow=c(1,1))
+
+unique(traindata[,4])
+```
+
+```
+##  [1]  2  0  1  3  4  5  7 10  6 98 12  8  9 96 13 11
+```
+
+
+```r
+# 剔除最大的两个值
+for(i in c(4,8,10)){
+  x <- sort(traindata[,i],decreasing=T)
+  x <- data.frame(table(x))
+  x <- x[sort(x$x,decreasing = T),]
+  x <- x[1:2,1]
+  traindata <- traindata[!traindata[,i] %in% x,]
+}
+```
+
+
+```r
+# 变量分析
+library(ggplot2)
+ggplot(traindata, aes(x = x2, y = ..density..)) + 
+  geom_histogram(fill = "blue", colour = "grey60", size = 0.2, alpha = 0.2) +
+  geom_density()
+```
+
+```
+## `stat_bin()` using `bins = 30`. Pick better value with `binwidth`.
+```
+
+![plot of chunk unnamed-chunk-10](http://oiqvvwjga.bkt.clouddn.com/Credit%20card%20scoring%20modelunnamed-chunk-10-1.png)
+
+
+```r
+ggplot(traindata, aes(x = x5, y = ..density..)) + 
+  geom_histogram(fill = "blue", colour = "grey60", size = 0.2, alpha = 0.2) + 
+  geom_density() + xlim(1, 20000)
+```
+
+```
+## `stat_bin()` using `bins = 30`. Pick better value with `binwidth`.
+```
+
+```
+## Warning: Removed 3728 rows containing non-finite values (stat_bin).
+```
+
+```
+## Warning: Removed 3728 rows containing non-finite values (stat_density).
+```
+
+```
+## Warning: Removed 1 rows containing missing values (geom_bar).
+```
+
+![plot of chunk unnamed-chunk-11](http://oiqvvwjga.bkt.clouddn.com/Credit%20card%20scoring%20modelunnamed-chunk-11-1.png)
+
+
+```r
+library(corrplot)
+cor1 <- cor(traindata)
+corrplot(cor1)
+```
+
+![plot of chunk unnamed-chunk-12](http://oiqvvwjga.bkt.clouddn.com/Credit%20card%20scoring%20modelunnamed-chunk-12-1.png)
+
+
+```r
+corrplot(cor1,method = "number")
+```
+
+![plot of chunk unnamed-chunk-13](http://oiqvvwjga.bkt.clouddn.com/Credit%20card%20scoring%20modelunnamed-chunk-13-1.png)
+
+
+```r
+# 数据分区
+table(traindata$y)
+```
+
+```
+## 
+##      0      1 
+## 139848   9877
+```
+
+
+```r
+prop.table(table(traindata$y))
+```
+
+```
+## 
+##          0          1 
+## 0.93403239 0.06596761
+```
+
+
+```r
+library(caret)
+set.seed(1234) 
+splitIndex<-createDataPartition(traindata$y,time=1,p=0.5,list=FALSE) 
+train<-traindata[splitIndex,] 
+test<-traindata[-splitIndex,] 
+prop.table(table(train$y)) 
+```
+
+```
+## 
+##          0          1 
+## 0.93403951 0.06596049
+```
+
+
+```r
+prop.table(table(test$y)) 
+```
+
+```
+## 
+##          0          1 
+## 0.93402527 0.06597473
+```
+
+
+```r
+# 建立逻辑回归模型
+fit <- glm(y~.,train,family = "binomial")
+```
+
+```
+## Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
+```
+
+```r
+summary(fit)
+```
+
+```
+## 
+## Call:
+## glm(formula = y ~ ., family = "binomial", data = train)
+## 
+## Deviance Residuals: 
+##     Min       1Q   Median       3Q      Max  
+## -4.1918  -0.3398  -0.2761  -0.2242   4.3944  
+## 
+## Coefficients:
+##               Estimate Std. Error z value Pr(>|z|)    
+## (Intercept) -1.742e+00  6.424e-02 -27.109  < 2e-16 ***
+## x1           1.004e-05  9.919e-05   0.101  0.91935    
+## x2          -2.823e-02  1.272e-03 -22.201  < 2e-16 ***
+## x3           5.810e-01  1.574e-02  36.910  < 2e-16 ***
+## x4          -1.721e-05  1.411e-05  -1.220  0.22260    
+## x5          -2.519e-05  4.416e-06  -5.704 1.17e-08 ***
+## x6          -1.367e-03  3.782e-03  -0.361  0.71775    
+## x7           8.455e-01  2.459e-02  34.377  < 2e-16 ***
+## x8           7.732e-02  1.527e-02   5.062 4.15e-07 ***
+## x9           7.573e-01  3.340e-02  22.673  < 2e-16 ***
+## x10          4.097e-02  1.406e-02   2.913  0.00358 ** 
+## ---
+## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+## 
+## (Dispersion parameter for binomial family taken to be 1)
+## 
+##     Null deviance: 36393  on 74862  degrees of freedom
+## Residual deviance: 29754  on 74852  degrees of freedom
+## AIC: 29776
+## 
+## Number of Fisher Scoring iterations: 6
+```
+
+
+```r
+fit.step <- step(fit)
+```
+
+```
+## Start:  AIC=29776.04
+## y ~ x1 + x2 + x3 + x4 + x5 + x6 + x7 + x8 + x9 + x10
+```
+
+```
+##        Df Deviance   AIC
+## - x1    1    29754 29774
+## - x6    1    29754 29774
+## - x4    1    29756 29776
+## <none>       29754 29776
+## - x10   1    29762 29782
+## - x8    1    29779 29799
+## - x5    1    29797 29817
+## - x2    1    30276 30296
+## - x9    1    30278 30298
+## - x3    1    31025 31045
+## - x7    1    31183 31203
+```
+
+```
+## Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
+```
+
+```
+## 
+## Step:  AIC=29774.05
+## y ~ x2 + x3 + x4 + x5 + x6 + x7 + x8 + x9 + x10
+```
+
+
+
+```
+##        Df Deviance   AIC
+## - x6    1    29754 29772
+## - x4    1    29756 29774
+## <none>       29754 29774
+## - x10   1    29762 29780
+## - x8    1    29779 29797
+## - x5    1    29797 29815
+## - x2    1    30276 30294
+## - x9    1    30278 30296
+## - x3    1    31025 31043
+## - x7    1    31183 31201
+```
+
+```
+## Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
+```
+
+```
+## 
+## Step:  AIC=29772.19
+## y ~ x2 + x3 + x4 + x5 + x7 + x8 + x9 + x10
+```
+
+
+```
+##        Df Deviance   AIC
+## - x4    1    29756 29772
+## <none>       29754 29772
+## - x10   1    29763 29779
+## - x8    1    29781 29797
+## - x5    1    29798 29814
+## - x9    1    30279 30295
+## - x2    1    30295 30311
+## - x3    1    31044 31060
+## - x7    1    31214 31230
+```
+
+```
+## Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
+```
+
+```
+## 
+## Step:  AIC=29771.83
+## y ~ x2 + x3 + x5 + x7 + x8 + x9 + x10
+```
+
+
+```
+##        Df Deviance   AIC
+## <none>       29756 29772
+## - x10   1    29765 29779
+## - x8    1    29781 29795
+## - x5    1    29798 29812
+## - x9    1    30281 30295
+## - x2    1    30301 30315
+## - x3    1    31045 31059
+## - x7    1    31216 31230
+```
+
+```r
+summary(fit.step)
+```
+
+```
+## 
+## Call:
+## glm(formula = y ~ x2 + x3 + x5 + x7 + x8 + x9 + x10, family = "binomial", 
+##     data = train)
+## 
+## Deviance Residuals: 
+##     Min       1Q   Median       3Q      Max  
+## -4.1948  -0.3401  -0.2765  -0.2242   4.3691  
+## 
+## Coefficients:
+##               Estimate Std. Error z value Pr(>|z|)    
+## (Intercept) -1.747e+00  6.347e-02 -27.530  < 2e-16 ***
+## x2          -2.841e-02  1.247e-03 -22.777  < 2e-16 ***
+## x3           5.796e-01  1.555e-02  37.267  < 2e-16 ***
+## x5          -2.471e-05  4.346e-06  -5.686 1.30e-08 ***
+## x7           8.471e-01  2.428e-02  34.883  < 2e-16 ***
+## x8           7.137e-02  1.375e-02   5.189 2.11e-07 ***
+## x9           7.579e-01  3.340e-02  22.693  < 2e-16 ***
+## x10          4.224e-02  1.400e-02   3.017  0.00255 ** 
+## ---
+## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+## 
+## (Dispersion parameter for binomial family taken to be 1)
+## 
+##     Null deviance: 36393  on 74862  degrees of freedom
+## Residual deviance: 29756  on 74855  degrees of freedom
+## AIC: 29772
+## 
+## Number of Fisher Scoring iterations: 6
+```
+
+
+```r
+# 模型评估
+pre <- predict(fit.step,test)
+library(pROC)
+modelroc <- roc(test$y,pre)
+plot(modelroc, print.auc=TRUE, auc.polygon=TRUE, grid=c(0.1, 0.2),
+     grid.col=c("green", "red"), max.auc.polygon=TRUE,
+     auc.polygon.col="skyblue", print.thres=TRUE)
+```
+
+![plot of chunk unnamed-chunk-20](http://oiqvvwjga.bkt.clouddn.com/Credit%20card%20scoring%20modelunnamed-chunk-20-1.png)
+
+```
+## 
+## Call:
+## roc.default(response = test$y, predictor = pre)
+## 
+## Data: pre in 69923 controls (test$y 0) < 4939 cases (test$y 1).
+## Area under the curve: 0.8135
+```
+
+```r
+# 最优点FPR=1-TNR=0.837，TPR=0.649，AUC值为0.813，说明该模型的预测效果还是不错的，正确较高。
+```
+
+
+```r
+## WOE转换
+# 通过上述的Logistic回归，剔除x1,x4,x6三个变量，对剩下的变量进行WOE转换。
+# 进行分箱
+# age变量(x2)：
+cutx2= c(-Inf,30,35,40,45,50,55,60,65,75,Inf)
+plot(cut(train$x2,cutx2))
+```
+
+![plot of chunk unnamed-chunk-21](http://oiqvvwjga.bkt.clouddn.com/Credit%20card%20scoring%20modelunnamed-chunk-21-1.png)
+
+
+```r
+# NumberOfTime30-59DaysPastDueNotWorse变量(x3)：
+cutx3 = c(-Inf,0,1,3,5,Inf)
+plot(cut(train$x3,cutx3))
+```
+
+![plot of chunk unnamed-chunk-22](http://oiqvvwjga.bkt.clouddn.com/Credit%20card%20scoring%20modelunnamed-chunk-22-1.png)
+
+
+```r
+# MonthlyIncome变量(x5)：
+cutx5 = c(-Inf,1000,2000,3000,4000,5000,6000,7500,9500,12000,Inf)
+plot(cut(train$x5,cutx5))
+```
+
+![plot of chunk unnamed-chunk-23](http://oiqvvwjga.bkt.clouddn.com/Credit%20card%20scoring%20modelunnamed-chunk-23-1.png)
+
+
+```r
+# NumberOfTimes90DaysLate变量(x7)：
+cutx7 = c(-Inf,0,1,3,5,10,Inf)
+plot(cut(train$x7,cutx7))
+```
+
+![plot of chunk unnamed-chunk-24](http://oiqvvwjga.bkt.clouddn.com/Credit%20card%20scoring%20modelunnamed-chunk-24-1.png)
+
+
+```r
+# NumberRealEstateLoansOrLines变量(x8)：
+cutx8= c(-Inf,0,1,2,3,5,Inf)
+plot(cut(train$x8,cutx8))
+```
+
+![plot of chunk unnamed-chunk-25](http://oiqvvwjga.bkt.clouddn.com/Credit%20card%20scoring%20modelunnamed-chunk-25-1.png)
+
+
+```r
+# NumberOfTime60-89DaysPastDueNotWorse变量(x9)：
+cutx9 = c(-Inf,0,1,3,5,Inf)
+plot(cut(train$x9,cutx9))
+```
+
+![plot of chunk unnamed-chunk-26](http://oiqvvwjga.bkt.clouddn.com/Credit%20card%20scoring%20modelunnamed-chunk-26-1.png)
+
+
+```r
+# NumberOfDependents变量(x10)：
+cutx10 = c(-Inf,0,1,2,3,5,Inf)
+plot(cut(train$x10,cutx10))
+```
+
+![plot of chunk unnamed-chunk-27](http://oiqvvwjga.bkt.clouddn.com/Credit%20card%20scoring%20modelunnamed-chunk-27-1.png)
+
+```r
+# 计算WOE值
+```
+

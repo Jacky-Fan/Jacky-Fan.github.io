@@ -1,0 +1,518 @@
+---
+layout:     post
+title:      "降维技术"
+subtitle:   " \"主成分分析,主成分分类，因子分析，对应分析\""
+date:       2016-08-25 16:30:00
+author:     "Jacky"
+header-img: "img/post-bg-2015.jpg"
+tags:
+    R笔记
+---
+
+
+
+```r
+# 主成分分析
+# 例1：中学生身体四项指标的主成分分析
+#### 用数据框形式输入数据
+student<-data.frame(
+  X1=c(148, 139, 160, 149, 159, 142, 153, 150, 151, 139, 
+       140, 161, 158, 140, 137, 152, 149, 145, 160, 156, 
+       151, 147, 157, 147, 157, 151, 144, 141, 139, 148), 
+  X2=c(41, 34, 49, 36, 45, 31, 43, 43, 42, 31, 
+       29, 47, 49, 33, 31, 35, 47, 35, 47, 44,
+       42, 38, 39, 30, 48, 36, 36, 30, 32, 38),
+  X3=c(72, 71, 77, 67, 80, 66, 76, 77, 77, 68, 
+       64, 78, 78, 67, 66, 73, 82, 70, 74, 78, 
+       73, 73, 68, 65, 80, 74, 68, 67, 68, 70),
+  X4=c(78, 76, 86, 79, 86, 76, 83, 79, 80, 74, 
+       74, 84, 83, 77, 73, 79, 79, 77, 87, 85, 
+       82, 78, 80, 75, 88, 80, 76, 76, 73, 78)
+)
+
+#### 作主成分分析
+student.pr<-princomp(student, cor=TRUE)
+#### 并显示分析结果
+summary(student.pr, loadings=TRUE)
+```
+
+```
+## Importance of components:
+##                           Comp.1     Comp.2     Comp.3     Comp.4
+## Standard deviation     1.8817805 0.55980636 0.28179594 0.25711844
+## Proportion of Variance 0.8852745 0.07834579 0.01985224 0.01652747
+## Cumulative Proportion  0.8852745 0.96362029 0.98347253 1.00000000
+## 
+## Loadings:
+##    Comp.1 Comp.2 Comp.3 Comp.4
+## X1 -0.497  0.543 -0.450  0.506
+## X2 -0.515 -0.210 -0.462 -0.691
+## X3 -0.481 -0.725  0.175  0.461
+## X4 -0.507  0.368  0.744 -0.232
+```
+
+
+```r
+#### 作预测
+predict(student.pr)
+```
+
+```
+##            Comp.1      Comp.2      Comp.3       Comp.4
+##  [1,]  0.06990950 -0.23813701 -0.35509248 -0.266120139
+##  [2,]  1.59526340 -0.71847399  0.32813232 -0.118056646
+##  [3,] -2.84793151  0.38956679 -0.09731731 -0.279482487
+##  [4,]  0.75996988  0.80604335 -0.04945722 -0.162949298
+##  [5,] -2.73966777  0.01718087  0.36012615  0.358653044
+##  [6,]  2.10583168  0.32284393  0.18600422 -0.036456084
+##  [7,] -1.42105591 -0.06053165  0.21093321 -0.044223092
+##  [8,] -0.82583977 -0.78102576 -0.27557798  0.057288572
+##  [9,] -0.93464402 -0.58469242 -0.08814136  0.181037746
+## [10,]  2.36463820 -0.36532199  0.08840476  0.045520127
+## [11,]  2.83741916  0.34875841  0.03310423 -0.031146930
+## [12,] -2.60851224  0.21278728 -0.33398037  0.210157574
+## [13,] -2.44253342 -0.16769496 -0.46918095 -0.162987830
+## [14,]  1.86630669  0.05021384  0.37720280 -0.358821916
+## [15,]  2.81347421 -0.31790107 -0.03291329 -0.222035112
+## [16,]  0.06392983  0.20718448  0.04334340  0.703533624
+## [17,] -1.55561022 -1.70439674 -0.33126406  0.007551879
+## [18,]  1.07392251 -0.06763418  0.02283648  0.048606680
+## [19,] -2.52174212  0.97274301  0.12164633 -0.390667991
+## [20,] -2.14072377  0.02217881  0.37410972  0.129548960
+## [21,] -0.79624422  0.16307887  0.12781270 -0.294140762
+## [22,]  0.28708321 -0.35744666 -0.03962116  0.080991989
+## [23,] -0.25151075  1.25555188 -0.55617325  0.109068939
+## [24,]  2.05706032  0.78894494 -0.26552109  0.388088643
+## [25,] -3.08596855 -0.05775318  0.62110421 -0.218939612
+## [26,] -0.16367555  0.04317932  0.24481850  0.560248997
+## [27,]  1.37265053  0.02220972 -0.23378320 -0.257399715
+## [28,]  2.16097778  0.13733233  0.35589739  0.093123683
+## [29,]  2.40434827 -0.48613137 -0.16154441 -0.007914021
+## [30,]  0.50287468  0.14734317 -0.20590831 -0.122078819
+```
+
+
+```r
+#### 画碎石图
+screeplot(student.pr)
+```
+
+![plot of chunk unnamed-chunk-4](http://oiqvvwjga.bkt.clouddn.com/dimensionality%20reductionunnamed-chunk-4-1.png)
+
+
+```r
+screeplot(student.pr,type="lines")
+```
+
+![plot of chunk unnamed-chunk-5](http://oiqvvwjga.bkt.clouddn.com/dimensionality%20reductionunnamed-chunk-5-1.png)
+
+
+```r
+biplot(student.pr)
+```
+
+![plot of chunk unnamed-chunk-6](http://oiqvvwjga.bkt.clouddn.com/dimensionality%20reductionunnamed-chunk-6-1.png)
+
+```r
+## princomp(~X1+X2+X3+X4,data=student, cor=T)
+```
+
+
+```r
+# 例2：主成分分类
+#### 输入数据, 按下三角输入, 构成向量
+x<-c(1.00, 
+     0.79, 1.00, 
+     0.36, 0.31, 1.00, 
+     0.96, 0.74, 0.38, 1.00, 
+     0.89, 0.58, 0.31, 0.90, 1.00, 
+     0.79, 0.58, 0.30, 0.78, 0.79, 1.00, 
+     0.76, 0.55, 0.35, 0.75, 0.74, 0.73, 1.00, 
+     0.26, 0.19, 0.58, 0.25, 0.25, 0.18, 0.24, 1.00,
+     0.21, 0.07, 0.28, 0.20, 0.18, 0.18, 0.29,-0.04, 1.00,
+     0.26, 0.16, 0.33, 0.22, 0.23, 0.23, 0.25, 0.49,-0.34, 1.00, 
+     0.07, 0.21, 0.38, 0.08,-0.02, 0.00, 0.10, 0.44,-0.16, 0.23, 
+     1.00, 
+     0.52, 0.41, 0.35, 0.53, 0.48, 0.38, 0.44, 0.30,-0.05, 0.50, 
+     0.24, 1.00, 
+     0.77, 0.47, 0.41, 0.79, 0.79, 0.69, 0.67, 0.32, 0.23, 0.31, 
+     0.10, 0.62, 1.00, 
+     0.25, 0.17, 0.64, 0.27, 0.27, 0.14, 0.16, 0.51, 0.21, 0.15, 
+     0.31, 0.17, 0.26, 1.00, 
+     0.51, 0.35, 0.58, 0.57, 0.51, 0.26, 0.38, 0.51, 0.15, 0.29, 
+     0.28, 0.41, 0.50, 0.63, 1.00, 
+     0.21, 0.16, 0.51, 0.26, 0.23, 0.00, 0.12, 0.38, 0.18, 0.14, 
+     0.31, 0.18, 0.24, 0.50, 0.65, 1.00)
+
+#### 输入变量名称
+names<-c("X1", "X2", "X3", "X4", "X5", "X6", "X7", "X8", "X9",  
+         "X10", "X11", "X12", "X13", "X14", "X15", "X16")
+#### 将矩阵生成相关矩阵
+R<-matrix(0, nrow=16, ncol=16, dimnames=list(names, names))
+for (i in 1:16){
+  for (j in 1:i){
+    R[i,j]<-x[(i-1)*i/2+j]; R[j,i]<-R[i,j]
+  }
+}
+
+#### 作主成分分析
+pr<-princomp(covmat=R); load<-loadings(pr)
+#### 画散点图
+plot(load[,1:2]); text(load[,1], load[,2], adj=c(-0.4, 0.3))
+```
+
+![plot of chunk unnamed-chunk-7](http://oiqvvwjga.bkt.clouddn.com/dimensionality%20reductionunnamed-chunk-7-1.png)
+
+
+```r
+# 例3：PCA:构建股票市场指数
+library(ggplot2)
+prices<-read.csv("stock_prices.csv")
+head(prices)
+```
+
+```
+##         Date Stock Close
+## 1 2011-05-25   DTE 51.12
+## 2 2011-05-24   DTE 51.51
+## 3 2011-05-23   DTE 51.47
+## 4 2011-05-20   DTE 51.90
+## 5 2011-05-19   DTE 51.91
+## 6 2011-05-18   DTE 51.68
+```
+
+
+```r
+# 把数据集中的时间戳转换为正确编码的日期变量
+library(lubridate)
+prices<-transform(prices,Date=ymd(Date))
+head(prices)
+```
+
+```
+##         Date Stock Close
+## 1 2011-05-25   DTE 51.12
+## 2 2011-05-24   DTE 51.51
+## 3 2011-05-23   DTE 51.47
+## 4 2011-05-20   DTE 51.90
+## 5 2011-05-19   DTE 51.91
+## 6 2011-05-18   DTE 51.68
+```
+
+
+```r
+# 使用reshape包中的cast函数，创建与前面表格相似的数据矩阵。
+
+library(reshape)
+date.stock.matrix<-cast(prices,Date~Stock,value="Close")
+head(date.stock.matrix)
+```
+
+```
+##         Date   ADC   AFL ARKR  AZPN CLFD   DDR   DTE  ENDP  FLWS    FR
+## 1 2002-01-02 17.70 23.78 8.15 17.10 3.19 18.80 42.37 11.54 15.77 31.16
+## 2 2002-01-03 16.14 23.52 8.15 17.41 3.27 18.55 42.14 11.48 17.40 31.45
+## 3 2002-01-04 15.45 23.92 7.79 17.90 3.28 18.46 41.79 11.60 17.11 31.46
+## 4 2002-01-07 16.59 23.12 7.79 17.49 3.50 18.30 41.48 11.90 17.38 31.10
+## 5 2002-01-08 16.76 25.54 7.35 17.89 4.24 18.57 40.69 12.41 14.62 31.40
+## 6 2002-01-09 16.78 26.30 7.40 18.25 4.25 18.41 40.81 12.27 14.27 31.05
+##   GMXR   GPC    HE ISSC  ISSI   KSS  MTSC   NWN  ODFL PARL RELV SIGM   STT
+## 1 4.50 36.09 40.41 7.82 12.78 70.23 10.03 26.20 13.40 1.92 1.30 1.75 52.11
+## 2 4.37 35.90 40.53 7.29 13.40 69.65 10.85 26.25 13.00 1.94 1.22 2.11 52.90
+## 3 4.45 35.60 40.54 6.90 14.16 70.21 10.34 26.46 13.00 1.98 1.26 2.20 54.16
+## 4 4.38 35.83 40.25 6.30 13.81 70.17  9.99 26.84 13.32 1.94 1.28 2.11 55.14
+## 5 4.30 36.00 39.88 6.83 14.05 69.90 10.35 27.35 13.75 1.94 1.27 2.25 54.44
+## 6 4.25 36.20 39.90 7.00 14.15 69.01 10.15 26.15 13.74 1.97 1.28 2.16 54.92
+##   TRIB   UTR
+## 1 1.50 39.34
+## 2 1.55 39.49
+## 3 1.54 39.38
+## 4 1.55 38.55
+## 5 1.58 38.98
+## 6 1.64 39.60
+```
+
+
+```r
+# 发现有两条记录存在缺失值
+sum(!complete.cases(date.stock.matrix))
+```
+
+```
+## [1] 2
+```
+
+
+```r
+# 查看含有缺失值的记录
+date.stock.matrix[!complete.cases(date.stock.matrix),]
+```
+
+```
+##           Date  ADC   AFL  ARKR AZPN CLFD DDR   DTE  ENDP FLWS    FR  GMXR
+## 22  2002-02-01   NA    NA    NA   NA   NA  19    NA    NA   NA    NA    NA
+## 875 2005-06-22 30.4 43.49 26.56 5.76 1.47  NA 46.89 25.88 7.23 41.45 13.45
+##       GPC    HE  ISSC ISSI   KSS  MTSC   NWN  ODFL  PARL RELV SIGM   STT
+## 22     NA    NA    NA   NA    NA    NA    NA    NA    NA   NA   NA    NA
+## 875 42.76 27.21 35.42 7.22 56.06 34.54 36.87 27.74 28.96 10.3 8.12 49.22
+##     TRIB   UTR
+## 22    NA    NA
+## 875 6.69 49.98
+```
+
+
+```r
+# 删除含有缺失值的数据
+prices <- subset(prices, Date != ymd('2002-02-01'))
+prices <- subset(prices, Stock != 'DDR')
+date.stock.matrix <- cast(prices, Date ~ Stock, value = 'Close')
+# 可以使用cor函数来找到这个矩阵中所有数字列之间的相关性
+head(cor.matrix<-cor(date.stock.matrix[,2:ncol(date.stock.matrix)]))
+```
+
+```
+##             [,21]       [,22]       [,23]       [,24]
+##  [1,]  0.48017079  0.66945448  0.70507605  0.75507035
+##  [2,]  0.60293554  0.65333803  0.62683021  0.22893191
+##  [3,]  0.60904772  0.67730344  0.61294285  0.72377392
+##  [4,]  0.50656232  0.59657354  0.52210163  0.17228604
+##  [5,] -0.29185425 -0.28640093  0.02574753 -0.26109051
+##  [6,]  0.30084033  0.35497171  0.55471416  0.55545302
+##  [7,]  0.47095911  0.43891315  0.86888571  0.30499309
+##  [8,]  0.10650546  0.38717488 -0.13165425  0.61590193
+##  [9,]  0.19478754  0.54125237  0.23520078  0.89627215
+## [10,]  0.54893156  0.70670190  0.47275900  0.28431322
+## [11,]  0.54379292  0.52030823  0.82103004  0.45780986
+## [12,] -0.44193972 -0.14975375 -0.42196705  0.18086124
+## [13,]  0.14337092  0.27975370  0.22055752  0.77414739
+## [14,] -0.19432476  0.06477309  0.02912881  0.37913175
+## [15,]  0.03324630  0.23108405  0.26638011  0.37879427
+## [16,]  0.59616482  0.56849211  0.80291061  0.37094010
+## [17,]  0.58675682  0.32239587  0.53092031 -0.19727276
+## [18,]  0.02340507  0.04489343  0.29671630 -0.02135639
+## [19,] -0.08187445  0.13459285  0.23605116  0.59015023
+## [20,]  0.34247898  0.51840569  0.43971919  0.75979346
+## [21,]  1.00000000  0.70113159  0.58361771  0.26931964
+## [22,]  0.70113159  1.00000000  0.54766821  0.58027539
+## [23,]  0.58361771  0.54766821  1.00000000  0.44565617
+## [24,]  0.26931964  0.58027539  0.44565617  1.00000000
+```
+
+
+```r
+correlations<-as.numeric(cor.matrix)
+ggplot(data.frame(Correlation = correlations),
+       aes(x = Correlation, fill = 1)) +
+  geom_density() +
+  theme(legend.position = 'none')
+```
+
+![plot of chunk unnamed-chunk-14](http://oiqvvwjga.bkt.clouddn.com/dimensionality%20reductionunnamed-chunk-14-1.png)
+
+
+```r
+# 大部分相关性是正数，因此PCA适用于这份数据集
+pca<-princomp(date.stock.matrix[,2:ncol(date.stock.matrix)])
+pca
+```
+
+```
+## Call:
+## princomp(x = date.stock.matrix[, 2:ncol(date.stock.matrix)])
+## 
+## Standard deviations:
+##     Comp.1     Comp.2     Comp.3     Comp.4     Comp.5     Comp.6 
+## 29.1001249 20.4403404 12.6726924 11.4636450  8.4963820  8.1969345 
+##     Comp.7     Comp.8     Comp.9    Comp.10    Comp.11    Comp.12 
+##  5.5438308  5.1300931  4.7786752  4.2575099  3.3050931  2.6197715 
+##    Comp.13    Comp.14    Comp.15    Comp.16    Comp.17    Comp.18 
+##  2.4986181  2.1746125  1.9469475  1.8706240  1.6984043  1.6344116 
+##    Comp.19    Comp.20    Comp.21    Comp.22    Comp.23    Comp.24 
+##  1.2327471  1.1280913  0.9877634  0.8583681  0.7390626  0.4347983 
+## 
+##  24  variables and  2366 observations.
+```
+
+
+```r
+# 通过观察第一主成分的载荷量(loadings)来更加细致地研究它。
+principal.component <- pca$loadings[, 1]
+# 分析载荷的密度图
+loadings <- as.numeric(principal.component)
+ggplot(data.frame(Loading = loadings),
+       aes(x = Loading, fill = 1)) +
+  geom_density() +
+  theme(legend.position = 'none')
+```
+
+![plot of chunk unnamed-chunk-16](http://oiqvvwjga.bkt.clouddn.com/dimensionality%20reductionunnamed-chunk-16-1.png)
+
+
+```r
+# 到目前为止我们已经获得了主成分，接下来可以把数据总结成一列了。可以使用predict函数完成这个目标：
+market.index<-predict(pca)[,1]
+
+# 如何才能知道这些预测值的效果呢？我们使用道琼斯指数(Dow Jones Index)DJI
+dji.prices<-read.csv("DJI.csv")
+dji.prices<-transform(dji.prices,Date=ymd(Date))
+# 取一个子集，仅仅获得我们感兴趣的那些日期
+dji.prices<-subset(dji.prices,Date>ymd('2001-12-31'))
+dji.prices<-subset(dji.prices,Date!=ymd('2002-02-01'))
+# 然后，提取DJI感兴趣的部分，也就是每日收盘价格和我们记录过的那些日期，因为它们的顺序和我们现在的数据集相反，用rev函数反转它们
+dji<-with(dji.prices,rev(Close))
+dates<-with(dji.prices,rev(Date))
+# 现在，我们可以绘制一些简单的图，将使用PCA生成的市场指数和DJI相比较：
+comparison<-data.frame(Date=dates,MarketIndex=market.index,DJI=dji)
+ggplot(comparison,aes(x=MarketIndex,y=DJI))+
+  geom_point()+
+  geom_smooth(method="lm",se=FALSE)
+```
+
+![plot of chunk unnamed-chunk-17](http://oiqvvwjga.bkt.clouddn.com/dimensionality%20reductionunnamed-chunk-17-1.png)
+
+
+```r
+# 从图看出，那些之前看上去烦人的负载荷，真的成了麻烦的源头：我们的指数和DJI负相关。
+# 但是，我们可以很容易地解决这个麻烦。只需要对指数乘以-1，即可生成一个和DJI正相关的指数.
+comparison<-transform(comparison,MarketIndex=-1*MarketIndex)
+# 现在可以再一次尝试进行比较了：
+ggplot(comparison,aes(x=MarketIndex,y=DJI))+
+  geom_point()+
+  geom_smooth(method="lm",se=FALSE)
+```
+
+![plot of chunk unnamed-chunk-18](http://oiqvvwjga.bkt.clouddn.com/dimensionality%20reductionunnamed-chunk-18-1.png)
+
+```r
+# 我们已经修正了指数的方向，并且它看上去和DJI真的很匹配。
+```
+
+
+```r
+#  因子分析
+# 下面因子分析时默认旋转rotation="varimax"
+w=read.csv("LA.Neighborhoods.csv") #读入数据
+w$density=w$Population/w$Area      #增加人口密度变量
+u=w[,-c(12:15)] #去掉人口、面积、经纬度变量
+(a=factanal(factors=2,scale(u[,-1]),scores="regression"))
+```
+
+```
+## 
+## Call:
+## factanal(x = scale(u[, -1]), factors = 2, scores = "regression")
+## 
+## Uniquenesses:
+##    Income   Schools Diversity       Age     Homes      Vets     Asian 
+##     0.352     0.973     0.987     0.200     0.754     0.439     0.833 
+##     Black    Latino     White   density 
+##     0.005     0.071     0.055     0.809 
+## 
+## Loadings:
+##           Factor1 Factor2
+## Income     0.781   0.197 
+## Schools            0.163 
+## Diversity                
+## Age        0.893         
+## Homes      0.491         
+## Vets       0.702  -0.263 
+## Asian              0.408 
+## Black     -0.212  -0.975 
+## Latino    -0.944   0.195 
+## White      0.913   0.334 
+## density   -0.428         
+## 
+##                Factor1 Factor2
+## SS loadings      4.101   1.422
+## Proportion Var   0.373   0.129
+## Cumulative Var   0.373   0.502
+## 
+## Test of the hypothesis that 2 factors are sufficient.
+## The chi square statistic is 631.51 on 34 degrees of freedom.
+## The p-value is 3.64e-111
+```
+
+```r
+(a$loadings); #(a$scores)
+```
+
+```
+## 
+## Loadings:
+##           Factor1 Factor2
+## Income     0.781   0.197 
+## Schools            0.163 
+## Diversity                
+## Age        0.893         
+## Homes      0.491         
+## Vets       0.702  -0.263 
+## Asian              0.408 
+## Black     -0.212  -0.975 
+## Latino    -0.944   0.195 
+## White      0.913   0.334 
+## density   -0.428         
+## 
+##                Factor1 Factor2
+## SS loadings      4.101   1.422
+## Proportion Var   0.373   0.129
+## Cumulative Var   0.373   0.502
+```
+
+```r
+plot(a$loadings[,1:2],type="n",ylim=c(-1.1,1.1),
+     xlim=c(-1.1,1.2),xlab="Factor 1",ylab="Facor 2",
+     main="Loadings")
+
+abline(h=0);abline(v=0)
+text(a$loadings[,1],a$loadings[,2],
+     labels=row.names(a$loadings),cex=1)
+```
+
+![plot of chunk unnamed-chunk-20](http://oiqvvwjga.bkt.clouddn.com/dimensionality%20reductionunnamed-chunk-20-1.png)
+
+
+```r
+plot(a$scores[,1:2],type="n",ylim=c(-2,1.5),xlim=c(-2.5,2.5),
+     xlab="Factor 1",ylab="Factor 2",main="Factor Scores")
+abline(h=0);abline(v=0)
+
+text(a$scores[,1],a$scores[,2],labels=u[,1],cex=0.7)
+```
+
+![plot of chunk unnamed-chunk-21](http://oiqvvwjga.bkt.clouddn.com/dimensionality%20reductionunnamed-chunk-21-1.png)
+
+
+```r
+# 对应分析
+library(MASS)
+v=caith  #数据来源
+colnames(v)=paste(colnames(v),"hair")
+rownames(v)=paste(rownames(v),"eye")
+(cc=corresp(v,nf=2)) #对应分析集结果输出
+```
+
+```
+## First canonical correlation(s): 0.4463684 0.1734554 
+## 
+##  Row scores:
+##                   [,1]       [,2]
+## blue eye   -0.89679252  0.9536227
+## light eye  -0.98731818  0.5100045
+## medium eye  0.07530627 -1.4124778
+## dark eye    1.57434710  0.7720361
+## 
+##  Column scores:
+##                    [,1]       [,2]
+## fair hair   -1.21871379  1.0022432
+## red hair    -0.52257500  0.2783364
+## medium hair -0.09414671 -1.2009094
+## dark hair    1.31888486  0.5992920
+## black hair   2.45176017  1.6513565
+```
+
+```r
+biplot(cc) #画图
+```
+
+![plot of chunk unnamed-chunk-23](http://oiqvvwjga.bkt.clouddn.com/dimensionality%20reductionunnamed-chunk-23-1.png)
+
