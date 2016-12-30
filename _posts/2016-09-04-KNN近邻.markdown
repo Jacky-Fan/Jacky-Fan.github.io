@@ -1,0 +1,260 @@
+---
+layout:     post
+title:      "KNN近邻算法"
+subtitle:   " \"对iris数据集进行分类, 诊断乳腺癌, 对汽车类型进行识别\""
+date:       2016-09-04 16:00:00
+author:     "Jacky"
+header-img: "img/post-bg-2015.jpg"
+tags:
+    R实战
+---
+
+
+```r
+#### 利用KNN近邻分类算法对iris数据集进行分类
+# 数据抽样
+library(caret)
+index <- createDataPartition(iris$Species,times = 1,p = 0.5,list = F) # 按照Species变量等比例抽取50%的下标集最为训练集数据
+# 数据分区
+train <- iris[index,] # 训练集
+test <- iris[-index,] # 测试集
+# 利用KNN算法对测试集的类别进行分类
+library(class)
+a <- knn(train[,1:4],test[,1:4],train[,5],k=3) # 选择三个邻居
+
+# 自定义函数实现KNN算法流程
+ceshi <- function(n=1,k=3){
+  # 求待分类样本与已经样本的欧式距离
+  x <- (test[rep(n,nrow(train)),1:4]-train[,1:4])^2
+  myfun <- function(x){
+    sqrt(sum(x))
+  }
+  train$dist <- apply(x,1,myfun)
+  # 对距离进行排序，选取最近的k个邻居
+  mydata <- train[order(train$dist)[1:k],5:6]
+  # 提取最大占比的类别
+  result <- data.frame(sort(table(mydata$Species),decreasing = T))
+  Species <- result[1,1]
+  return(list(Species,mydata))
+}
+ceshi(n=73,k=5)
+```
+
+```
+## [[1]]
+## [1] virginica
+## Levels: virginica versicolor setosa
+## 
+## [[2]]
+##        Species      dist
+## 102  virginica 0.0000000
+## 150  virginica 0.3316625
+## 84  versicolor 0.3605551
+## 128  virginica 0.4795832
+## 115  virginica 0.5099020
+```
+
+```r
+# 查看分类结果的误差率
+t <- table(test$Species,a)
+paste0(round((sum(t)-sum(diag(t)))*100/sum(t),2),"%")
+```
+
+```
+## [1] "6.67%"
+```
+
+```r
+### 案例二：用KNN算法诊断乳腺癌
+# 导入数据
+wbcd <- read.csv("wisc_bc_data.csv",header = F)
+# 对列名进行重命名
+colnames(wbcd) <- c("id","y",paste0("x",1:30))
+# 移除id列数据
+wbcd <- wbcd[,-1]
+# 数据探索
+summary(wbcd)
+```
+
+```
+##  y             x1               x2              x3        
+##  B:357   Min.   : 6.981   Min.   : 9.71   Min.   : 43.79  
+##  M:212   1st Qu.:11.700   1st Qu.:16.17   1st Qu.: 75.17  
+##          Median :13.370   Median :18.84   Median : 86.24  
+##          Mean   :14.127   Mean   :19.29   Mean   : 91.97  
+##          3rd Qu.:15.780   3rd Qu.:21.80   3rd Qu.:104.10  
+##          Max.   :28.110   Max.   :39.28   Max.   :188.50  
+##        x4               x5                x6                x7         
+##  Min.   : 143.5   Min.   :0.05263   Min.   :0.01938   Min.   :0.00000  
+##  1st Qu.: 420.3   1st Qu.:0.08637   1st Qu.:0.06492   1st Qu.:0.02956  
+##  Median : 551.1   Median :0.09587   Median :0.09263   Median :0.06154  
+##  Mean   : 654.9   Mean   :0.09636   Mean   :0.10434   Mean   :0.08880  
+##  3rd Qu.: 782.7   3rd Qu.:0.10530   3rd Qu.:0.13040   3rd Qu.:0.13070  
+##  Max.   :2501.0   Max.   :0.16340   Max.   :0.34540   Max.   :0.42680  
+##        x8                x9              x10               x11        
+##  Min.   :0.00000   Min.   :0.1060   Min.   :0.04996   Min.   :0.1115  
+##  1st Qu.:0.02031   1st Qu.:0.1619   1st Qu.:0.05770   1st Qu.:0.2324  
+##  Median :0.03350   Median :0.1792   Median :0.06154   Median :0.3242  
+##  Mean   :0.04892   Mean   :0.1812   Mean   :0.06280   Mean   :0.4052  
+##  3rd Qu.:0.07400   3rd Qu.:0.1957   3rd Qu.:0.06612   3rd Qu.:0.4789  
+##  Max.   :0.20120   Max.   :0.3040   Max.   :0.09744   Max.   :2.8730  
+##       x12              x13              x14               x15          
+##  Min.   :0.3602   Min.   : 0.757   Min.   :  6.802   Min.   :0.001713  
+##  1st Qu.:0.8339   1st Qu.: 1.606   1st Qu.: 17.850   1st Qu.:0.005169  
+##  Median :1.1080   Median : 2.287   Median : 24.530   Median :0.006380  
+##  Mean   :1.2169   Mean   : 2.866   Mean   : 40.337   Mean   :0.007041  
+##  3rd Qu.:1.4740   3rd Qu.: 3.357   3rd Qu.: 45.190   3rd Qu.:0.008146  
+##  Max.   :4.8850   Max.   :21.980   Max.   :542.200   Max.   :0.031130  
+##       x16                x17               x18          
+##  Min.   :0.002252   Min.   :0.00000   Min.   :0.000000  
+##  1st Qu.:0.013080   1st Qu.:0.01509   1st Qu.:0.007638  
+##  Median :0.020450   Median :0.02589   Median :0.010930  
+##  Mean   :0.025478   Mean   :0.03189   Mean   :0.011796  
+##  3rd Qu.:0.032450   3rd Qu.:0.04205   3rd Qu.:0.014710  
+##  Max.   :0.135400   Max.   :0.39600   Max.   :0.052790  
+##       x19                x20                 x21             x22       
+##  Min.   :0.007882   Min.   :0.0008948   Min.   : 7.93   Min.   :12.02  
+##  1st Qu.:0.015160   1st Qu.:0.0022480   1st Qu.:13.01   1st Qu.:21.08  
+##  Median :0.018730   Median :0.0031870   Median :14.97   Median :25.41  
+##  Mean   :0.020542   Mean   :0.0037949   Mean   :16.27   Mean   :25.68  
+##  3rd Qu.:0.023480   3rd Qu.:0.0045580   3rd Qu.:18.79   3rd Qu.:29.72  
+##  Max.   :0.078950   Max.   :0.0298400   Max.   :36.04   Max.   :49.54  
+##       x23              x24              x25               x26         
+##  Min.   : 50.41   Min.   : 185.2   Min.   :0.07117   Min.   :0.02729  
+##  1st Qu.: 84.11   1st Qu.: 515.3   1st Qu.:0.11660   1st Qu.:0.14720  
+##  Median : 97.66   Median : 686.5   Median :0.13130   Median :0.21190  
+##  Mean   :107.26   Mean   : 880.6   Mean   :0.13237   Mean   :0.25427  
+##  3rd Qu.:125.40   3rd Qu.:1084.0   3rd Qu.:0.14600   3rd Qu.:0.33910  
+##  Max.   :251.20   Max.   :4254.0   Max.   :0.22260   Max.   :1.05800  
+##       x27              x28               x29              x30         
+##  Min.   :0.0000   Min.   :0.00000   Min.   :0.1565   Min.   :0.05504  
+##  1st Qu.:0.1145   1st Qu.:0.06493   1st Qu.:0.2504   1st Qu.:0.07146  
+##  Median :0.2267   Median :0.09993   Median :0.2822   Median :0.08004  
+##  Mean   :0.2722   Mean   :0.11461   Mean   :0.2901   Mean   :0.08395  
+##  3rd Qu.:0.3829   3rd Qu.:0.16140   3rd Qu.:0.3179   3rd Qu.:0.09208  
+##  Max.   :1.2520   Max.   :0.29100   Max.   :0.6638   Max.   :0.20750
+```
+
+```r
+# 对数据进行归一化处理
+normalize <- function(x){
+  (x-min(x))/(max(x)-min(x))
+}
+wbcd_new <- as.data.frame(apply(wbcd[,2:31],2,normalize))
+wbcd_new$y <- wbcd$y
+# 数据分区，80%作为训练集，剩下的20%作为测试集
+index <- createDataPartition(wbcd_new$y,times = 1,p=0.8,list = F)
+train <- wbcd_new[index,]
+test <- wbcd_new[-index,]
+# 利用KNN算法对肿块是良性还是恶性进行预测
+b <- knn(train[,1:30],test[,1:30],train[,31],k=floor(sqrt(nrow(train))))
+
+# 构建混淆矩阵，查看误差率
+(t <- table(test$y,b))
+```
+
+```
+##    b
+##      B  M
+##   B 68  3
+##   M  4 38
+```
+
+```r
+paste0(round((sum(t)-sum(diag(t)))/sum(t),2)*100,"%")
+```
+
+```
+## [1] "6%"
+```
+
+```r
+#### 案例三：用KNN算法对汽车类型进行识别
+# 导入数据
+xaa <- read.table("xaa.dat") #训练集
+xab <- read.table("xab.dat") #测试集
+# 对列进行重命名
+colnames(xaa) = colnames(xab) <- c(paste0("x",1:18),"y")
+# 查看数据描述性统计分析
+summary(xaa)
+```
+
+```
+##        x1               x2              x3               x4       
+##  Min.   : 73.00   Min.   :34.00   Min.   : 51.00   Min.   :105.0  
+##  1st Qu.: 87.00   1st Qu.:39.25   1st Qu.: 68.00   1st Qu.:140.2  
+##  Median : 92.00   Median :44.00   Median : 81.50   Median :166.5  
+##  Mean   : 92.56   Mean   :44.65   Mean   : 81.17   Mean   :168.1  
+##  3rd Qu.: 98.00   3rd Qu.:49.00   3rd Qu.: 95.50   3rd Qu.:197.0  
+##  Max.   :119.00   Max.   :59.00   Max.   :108.00   Max.   :306.0  
+##        x5               x6               x7              x8       
+##  Min.   : 50.00   Min.   : 5.000   Min.   :118.0   Min.   :26.00  
+##  1st Qu.: 55.25   1st Qu.: 6.000   1st Qu.:146.0   1st Qu.:34.00  
+##  Median : 62.00   Median : 8.000   Median :154.0   Median :43.00  
+##  Mean   : 62.59   Mean   : 8.894   Mean   :166.6   Mean   :41.45  
+##  3rd Qu.: 66.00   3rd Qu.:10.000   3rd Qu.:192.8   3rd Qu.:46.00  
+##  Max.   :126.00   Max.   :52.000   Max.   :261.0   Max.   :57.00  
+##        x9             x10             x11             x12       
+##  Min.   :17.00   Min.   :118.0   Min.   :135.0   Min.   :206.0  
+##  1st Qu.:19.00   1st Qu.:135.2   1st Qu.:168.0   1st Qu.:311.8  
+##  Median :19.00   Median :146.0   Median :175.5   Median :354.0  
+##  Mean   :20.43   Mean   :147.4   Mean   :188.2   Mean   :430.4  
+##  3rd Qu.:22.00   3rd Qu.:159.8   3rd Qu.:217.8   3rd Qu.:569.2  
+##  Max.   :28.00   Max.   :186.0   Max.   :280.0   Max.   :998.0  
+##       x13             x14              x15              x16       
+##  Min.   :112.0   Min.   : 62.00   Min.   : 0.000   Min.   : 0.00  
+##  1st Qu.:148.8   1st Qu.: 68.25   1st Qu.: 2.000   1st Qu.: 5.00  
+##  Median :173.5   Median : 72.00   Median : 5.000   Median : 9.00  
+##  Mean   :175.5   Mean   : 73.89   Mean   : 5.372   Mean   :10.34  
+##  3rd Qu.:203.5   3rd Qu.: 76.00   3rd Qu.: 7.750   3rd Qu.:14.00  
+##  Max.   :264.0   Max.   :127.00   Max.   :20.000   Max.   :38.00  
+##       x17             x18           y     
+##  Min.   :176.0   Min.   :182.0   bus :26  
+##  1st Qu.:183.0   1st Qu.:189.2   opel:20  
+##  Median :188.0   Median :195.0   saab:20  
+##  Mean   :188.3   Mean   :194.8   van :28  
+##  3rd Qu.:192.8   3rd Qu.:199.8            
+##  Max.   :202.0   Max.   :209.0
+```
+
+```r
+# 发现异常值，我们利用boxplot.stats函数对x15变量的异常值进行剔除
+xaa_clean <- xaa[!xaa$x15 %in% boxplot.stats(xaa$x15)$out,]
+# 利用KNN近邻算法对xab的汽车种类进行识别
+xab_pred <- knn(xaa_clean[,1:18],xab[,1:18],xaa_clean[,19],k=floor(sqrt(nrow(xaa_clean))))
+xab_pred
+```
+
+```
+##  [1] bus  saab van  van  opel bus  bus  van  van  van  saab saab opel van 
+## [15] bus  bus  van  van  van  van  van  van  opel saab bus  saab van  van 
+## [29] van  van  van  van  van  van  van  opel bus  van  bus  van  saab bus 
+## [43] van  van  van  van  bus  bus  saab bus  saab saab van  van  bus  van 
+## [57] bus  bus  van  opel van  saab van  van  van  van  van  opel saab van 
+## [71] saab saab van  saab bus  van  opel saab van  saab van  saab saab van 
+## [85] bus  van  opel van  bus  van  opel bus  bus  van 
+## Levels: bus opel saab van
+```
+
+```r
+# 构建混淆矩阵，计算误差率
+(t <- table(xab$y,xab_pred))
+```
+
+```
+##       xab_pred
+##        bus opel saab van
+##   bus   14    1    6   5
+##   opel   0    5    8   9
+##   saab   5    3    4   9
+##   van    1    0    0  24
+```
+
+```r
+paste0(round((sum(t)-sum(diag(t)))*100/sum(t),2),"%")
+```
+
+```
+## [1] "50%"
+```
+

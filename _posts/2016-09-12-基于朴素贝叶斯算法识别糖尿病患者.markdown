@@ -1,0 +1,153 @@
+---
+layout:     post
+title:      "基于朴素贝叶斯算法识别糖尿病患者"
+subtitle:   " \"BaïveBayes\""
+date:       2016-09-12 16:00:00
+author:     "Jacky"
+header-img: "img/post-bg-2015.jpg"
+tags:
+    R实战
+    BaïveBayes
+    
+---
+
+
+```r
+##基于朴素贝叶斯算法识别糖尿病患者
+# 加载PimaIndiansDiabetes2数据集
+data(PimaIndiansDiabetes2,package = "mlbench")
+# 查看数据结构
+str(PimaIndiansDiabetes2)
+```
+
+```
+## 'data.frame':	768 obs. of  9 variables:
+##  $ pregnant: num  6 1 8 1 0 5 3 10 2 8 ...
+##  $ glucose : num  148 85 183 89 137 116 78 115 197 125 ...
+##  $ pressure: num  72 66 64 66 40 74 50 NA 70 96 ...
+##  $ triceps : num  35 29 NA 23 35 NA 32 NA 45 NA ...
+##  $ insulin : num  NA NA NA 94 168 NA 88 NA 543 NA ...
+##  $ mass    : num  33.6 26.6 23.3 28.1 43.1 25.6 31 35.3 30.5 NA ...
+##  $ pedigree: num  0.627 0.351 0.672 0.167 2.288 ...
+##  $ age     : num  50 31 32 21 33 30 26 29 53 54 ...
+##  $ diabetes: Factor w/ 2 levels "neg","pos": 2 1 2 1 2 1 2 1 2 2 ...
+```
+
+```r
+# 对数据缺失模式进行探索
+library(VIM)
+library(mice)
+md.pattern(PimaIndiansDiabetes2)
+```
+
+```
+##     pregnant pedigree age diabetes glucose mass pressure triceps insulin
+## 392        1        1   1        1       1    1        1       1       1
+##   1        1        1   1        1       0    1        1       1       1
+## 140        1        1   1        1       1    1        1       1       0
+##   1        1        1   1        1       1    0        1       1       1
+##   4        1        1   1        1       0    1        1       1       0
+##   2        1        1   1        1       1    1        0       1       0
+## 192        1        1   1        1       1    1        1       0       0
+##   1        1        1   1        1       1    0        1       1       0
+##  26        1        1   1        1       1    1        0       0       0
+##   2        1        1   1        1       1    0        1       0       0
+##   7        1        1   1        1       1    0        0       0       0
+##            0        0   0        0       5   11       35     227     374
+##        
+## 392   0
+##   1   1
+## 140   1
+##   1   1
+##   4   2
+##   2   2
+## 192   2
+##   1   2
+##  26   3
+##   2   3
+##   7   4
+##     652
+```
+
+```r
+aggr(PimaIndiansDiabetes2,prop=FALSE,number=TRUE)
+```
+
+![plot of chunk unnamed-chunk-3](http://oiqvvwjga.bkt.clouddn.com/Ba%C3%AFveBayesunnamed-chunk-3-1.png)
+
+```r
+# 对缺失值使用袋装方法进行插补
+library(caret)
+preproc <- preProcess(PimaIndiansDiabetes2[,-9],method = "bagImpute")
+data <- predict(preproc,PimaIndiansDiabetes2[,-9])
+# 增加diabetes变量
+data$diabetes <- PimaIndiansDiabetes2[,9]
+aggr(data,prop=FALSE,number=TRUE)
+```
+
+![plot of chunk unnamed-chunk-4](http://oiqvvwjga.bkt.clouddn.com/Ba%C3%AFveBayesunnamed-chunk-4-1.png)
+
+```r
+# 数据分区：按照diabetes进行等比例抽样，75%的数据作为训练集训练模型，25%的数据作为测试集用来验证模型
+library(caret)
+# 构建训练集的下标集
+index <- createDataPartition(data$diabetes,times = 1,p=0.75,list=FALSE)
+# 构建训练集和测试集
+train <- data[index,]
+test <- data[-index,]
+prop.table(table(data$diabetes))
+```
+
+```
+## 
+##       neg       pos 
+## 0.6510417 0.3489583
+```
+
+```r
+prop.table(table(train$diabetes))
+```
+
+```
+## 
+##       neg       pos 
+## 0.6510417 0.3489583
+```
+
+```r
+prop.table(table(test$diabetes))
+```
+
+```
+## 
+##       neg       pos 
+## 0.6510417 0.3489583
+```
+
+```r
+# 利用e1071包中的naiveBayes函数建立朴素贝叶斯模型
+library(e1071)
+model <- naiveBayes(diabetes~.,data=train)
+# 利用predict函数对测试集数据test进行分类预测
+pred <- predict(model,test)
+# 构建混淆矩阵，查看错误率
+(a <- table(test$diabetes,pred))
+```
+
+```
+##      pred
+##       neg pos
+##   neg 106  19
+##   pos  22  45
+```
+
+```r
+(b=paste0(round((sum(a)-sum(diag(a)))*100/sum(a),2),"%"))
+```
+
+```
+## [1] "21.35%"
+```
+
+
+
