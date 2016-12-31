@@ -1,0 +1,266 @@
+---
+layout:     post
+title:      "模型组合方法"
+subtitle:   " \"决策树, 随机森林\""
+date:       2016-09-18 16:00:00
+author:     "Jacky"
+header-img: "img/post-bg-2015.jpg"
+tags:
+    R实战
+    Decision Tree
+    
+---
+
+
+```r
+w=read.csv("CTG.NAOMIT.csv") #读入数据
+# 把用整数代表的分类变量水平标成factor型
+w$CLASS=factor(w$CLASS);w$NSP=factor(w$NSP);w$Tendency=factor(w$Tendency)
+#### 下面构造五折下标集###################################
+library(caret)
+ind<-createFolds(w$NSP,k=5,list=FALSE,returnTrain=FALSE)
+
+# adaboost分类
+# 为了描述这种方法，先通过adaboost对全部数据进行拟合来介绍一下输出，用下面的代码:
+
+library(adabag)
+set.seed(400)
+a=boosting(NSP~.,w)  #构建adaboost分类模型
+(z0=table(w[,23],predict(a,w)$class)) # 查看混淆矩阵
+```
+
+```
+##    
+##        1    2    3
+##   1 1655    0    0
+##   2    1  294    0
+##   3    0    0  176
+```
+
+```r
+(E0=(sum(z0)-sum(diag(z0)))/sum(z0))  # 查看预测误判率
+```
+
+```
+## [1] 0.0004703669
+```
+
+```r
+barplot(a$importance)  # 画出变量重要性图
+```
+
+![plot of chunk unnamed-chunk-8](http://oiqvvwjga.bkt.clouddn.com/zhuhemoxingunnamed-chunk-8-1.png)
+
+```r
+# 打印决策树
+library(rpart.plot)
+library(rattle)
+par(mfrow=c(1,2))
+fancyRpartPlot(a$trees[[1]])
+fancyRpartPlot(a$trees[[100]])
+```
+
+![plot of chunk unnamed-chunk-9](http://oiqvvwjga.bkt.clouddn.com/zhuhemoxingunnamed-chunk-9-1.png)
+
+```r
+par(mfrow=c(1,1))
+
+# 下面再做五折交叉验证，这里仅给出训练集和测试集的分类平均误判率。
+E0=rep(0,5);E1=E0
+
+for(i in 1:5){
+  n0=nrow(w)-nrow(w[ind==i,]);n1=nrow(w[ind==i,])
+  a=boosting(NSP~.,w[!ind==i,])
+  E0[i]=sum(w[!ind==i,23]!=predict(a,w[!ind==i,])$class)/n0
+  E1[i]=sum(w[ind==i,23]!=predict(a,w[ind==i,])$class)/n1
+}
+
+mean(E0);mean(E1)
+```
+
+```
+## [1] 0.0003528028
+```
+
+```
+## [1] 0.01223198
+```
+
+```r
+# bagging分类
+# 先通过用bagging对全部数据进行拟合来介绍一下输出。用下面的代码：
+a=bagging(NSP~.,w)
+(z0=table(w[,23],predict(a,w)$class)) # 查看混淆矩阵
+```
+
+```
+##    
+##        1    2    3
+##   1 1652    3    0
+##   2   29  265    1
+##   3    0    1  175
+```
+
+```r
+(E0=(sum(z0)-sum(diag(z0)))/sum(z0))  # 查看预测误判率
+```
+
+```
+## [1] 0.01599247
+```
+
+```r
+barplot(a$importance)  # 画出变量重要性图
+```
+
+![plot of chunk unnamed-chunk-12](http://oiqvvwjga.bkt.clouddn.com/zhuhemoxingunnamed-chunk-12-1.png)
+
+```r
+# 打印决策树
+library(rattle)
+par(mfrow=c(1,2))
+fancyRpartPlot(a$trees[[1]])
+fancyRpartPlot(a$trees[[100]])
+```
+
+![plot of chunk unnamed-chunk-13](http://oiqvvwjga.bkt.clouddn.com/zhuhemoxingunnamed-chunk-13-1.png)
+
+```r
+par(mfrow=c(1,1))
+```
+
+```r
+# 下面再做五折交叉验证，这里仅给出训练集和测试集的分类平均误判率。
+E0=rep(0,5);E1=E0
+for(i in 1:5){
+  n0=nrow(w)-nrow(w[ind==i,]);n1=nrow(w[ind==i,])
+  a=bagging(NSP~.,w[!ind==i,])
+  E0[i]=sum(w[!ind==i,23]!=predict(a,w[!ind==i,])$class)/n0
+  E1[i]=sum(w[ind==i,23]!=predict(a,w[ind==i,])$class)/n1
+}
+mean(E0);mean(E1)
+```
+
+```
+## [1] 0.01599274
+```
+
+```
+## [1] 0.01599669
+```
+
+```r
+# 随机森林分类
+library(randomForest)
+a=randomForest(NSP~.,data=w,importance=TRUE,proximity=TRUE) # 构建随机森林分类模型
+(z0=table(w[,23],predict(a,w)))  # 查看混淆矩阵
+```
+
+```
+##    
+##        1    2    3
+##   1 1655    0    0
+##   2    1  294    0
+##   3    0    0  176
+```
+
+```r
+(E0=(sum(z0)-sum(diag(z0)))/sum(z0))  #查看预测误判率
+```
+
+```
+## [1] 0.0004703669
+```
+
+```r
+# 查看变量重要性
+a$importance
+```
+
+```
+##                     1            2            3 MeanDecreaseAccuracy
+## LB       8.839830e-03 0.0195724856 1.776539e-02         1.101420e-02
+## AC       1.919451e-02 0.0395431684 4.700476e-02         2.431886e-02
+## FM       2.977243e-03 0.0059160760 3.183724e-03         3.384320e-03
+## UC       3.416219e-03 0.0127402989 3.462503e-02         7.300646e-03
+## DL       3.916532e-03 0.0055536156 1.452299e-02         5.034040e-03
+## DS       2.978287e-05 0.0000000000 3.030303e-06         2.321897e-05
+## DP       1.115192e-02 0.0120583196 3.176794e-02         1.293694e-02
+## ASTV     1.531144e-02 0.0564607460 9.804222e-02         2.785748e-02
+## MSTV     2.082292e-02 0.0423879406 1.051430e-01         3.077388e-02
+## ALTV     1.425393e-02 0.0394442000 1.021869e-01         2.503544e-02
+## MLTV     2.915245e-03 0.0235040760 2.313427e-02         7.448271e-03
+## Width    7.321467e-03 0.0068875128 2.212737e-02         8.469617e-03
+## Min      8.131845e-03 0.0084110563 3.216747e-02         1.019470e-02
+## Max      4.503751e-03 0.0079929549 1.215873e-02         5.628494e-03
+## Nmax     2.628580e-03 0.0050215289 7.253564e-03         3.342323e-03
+## Nzeros   2.783496e-05 0.0008044362 6.901330e-04         1.873663e-04
+## Mode     9.466585e-03 0.0140712617 4.413923e-02         1.298693e-02
+## Mean     1.646591e-02 0.0277171005 8.660948e-02         2.382509e-02
+## Median   9.064267e-03 0.0192975578 5.657335e-02         1.444176e-02
+## Variance 8.185530e-03 0.0133226278 3.897535e-02         1.147190e-02
+## Tendency 8.267008e-04 0.0009856383 3.129012e-03         1.037387e-03
+## CLASS    1.818130e-01 0.4181602700 4.183821e-01         2.341521e-01
+##          MeanDecreaseGini
+## LB             15.9904280
+## AC             25.3582193
+## FM              7.7262994
+## UC             17.1920438
+## DL              6.1198000
+## DS              0.2559891
+## DP             30.0611244
+## ASTV           64.2354403
+## MSTV           59.8598182
+## ALTV           55.6596066
+## MLTV           19.6856864
+## Width          14.9768036
+## Min            15.4727067
+## Max            10.6132999
+## Nmax            6.9307968
+## Nzeros          2.2870170
+## Mode           29.2902034
+## Mean           46.0978207
+## Median         27.1749573
+## Variance       16.3701260
+## Tendency        2.1157403
+## CLASS         307.3957237
+```
+
+```r
+# 画出变量重要性
+library(rattle)
+varImpPlot(a, main="Variable Importance Random Forest w")
+```
+
+![plot of chunk unnamed-chunk-17](http://oiqvvwjga.bkt.clouddn.com/zhuhemoxingunnamed-chunk-17-1.png)
+
+```r
+# 画出不同树数目的误差率
+plot(a,main="Error Rates Random Forest w")
+legend("topright", c("OOB", "1", "2", "3"), text.col=1:6, lty=1:3, col=1:3)
+```
+
+![plot of chunk unnamed-chunk-18](http://oiqvvwjga.bkt.clouddn.com/zhuhemoxingunnamed-chunk-18-1.png)
+
+```r
+# 下面再做随机森林分类的五折交叉验证，这里仅给出训练集和测试集的分类平均误判率
+library(randomForest)
+set.seed(1234)
+E0=rep(0,5);E1=E0
+for(i in 1:5){
+  n0=nrow(w)-nrow(w[ind==i,]);n1=nrow(w[ind==i,])
+  a=randomForest(NSP~.,w[!ind==i,])
+  E0[i]=sum(w[!ind==i,23]!=predict(a,w[!ind==i,]))/n0
+  E1[i]=sum(w[ind==i,23]!=predict(a,w[ind==i,]))/n1
+}
+mean(E0);mean(E1)
+```
+
+```
+## [1] 0.0003528028
+```
+
+```
+## [1] 0.01411433
+```
+
