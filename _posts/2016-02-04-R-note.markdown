@@ -11,7 +11,8 @@ tags:
 
 
 
-去除NA值
+ 去除NA值
+ 
 ```
 方案一
 ggplot(aes(x=friend_count), data=subset(pf, !is.na(gender)))+
